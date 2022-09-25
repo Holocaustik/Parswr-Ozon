@@ -24,15 +24,20 @@ class ParserOzon(object):
         driver.get(url)
         time.sleep(1)
         name_class_find = driver.find_element("xpath", '//span[contains(text(), "Углошлифовальная машина")]')
-        link_class = driver.find_element("xpath", '//a[contains(@class, "tile-hover-target")]').get_attribute('class').split()[1]
-        name_class = driver.find_element("xpath", '//span[contains(text(), "Углошлифовальная машина")]//preceding::span[1]').get_attribute('class')
+        link_class = \
+        driver.find_element("xpath", '//a[contains(@class, "tile-hover-target")]').get_attribute('class').split()[1]
+        name_class = driver.find_element("xpath",
+                                         '//span[contains(text(), "Углошлифовальная машина")]//preceding::span[1]').get_attribute(
+            'class')
         main_div = driver.find_element("xpath", '//span[contains(text(), "Углошлифовальная машина")]//ancestor::div[3]')
         main_cards_class = main_div.get_attribute('class')
         price_class = main_div.find_element("xpath", '//span[contains(text(), "₽")]').get_attribute('class').split()[0]
         review_class_up = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]')
         review_class = review_class_up.get_attribute('class')
-        rat_class = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]//preceding::div[1]').get_attribute('class')
-        divs_class = {'main_cards_class': main_cards_class, 'price_class': price_class, 'review_class': review_class,'rat_class': rat_class, 'link_class': link_class}
+        rat_class = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]//preceding::div[1]').get_attribute(
+            'class')
+        divs_class = {'main_cards_class': main_cards_class, 'price_class': price_class, 'review_class': review_class,
+                      'rat_class': rat_class, 'link_class': link_class}
         driver.close()
         driver.quit()
         print(main_cards_class)
@@ -45,15 +50,19 @@ class ParserOzon(object):
         driver.get(url)
         time.sleep(1)
         name_class_find = driver.find_element("xpath", '//span[contains(text(), "Шуруповерт аккумуляторный")]')
-        link_class = driver.find_element("xpath", '//a[contains(@class, "tile-hover-target")]').get_attribute('class').split()[1]
+        link_class = \
+        driver.find_element("xpath", '//a[contains(@class, "tile-hover-target")]').get_attribute('class').split()[1]
         name_class = name_class_find.get_attribute('class')
-        main_div = driver.find_element("xpath", '//span[contains(text(), "Шуруповерт аккумуляторный")]//ancestor::div[2]')
+        main_div = driver.find_element("xpath",
+                                       '//span[contains(text(), "Шуруповерт аккумуляторный")]//ancestor::div[2]')
         main_cards_class = main_div.get_attribute('class')
         price_class = main_div.find_element("xpath", '//span[contains(text(), "₽")]').get_attribute('class').split()[0]
         review_class_up = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]')
         review_class = review_class_up.get_attribute('class')
-        rat_class = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]//preceding::div[1]').get_attribute('class')
-        divs_class = {'main_cards_class': main_cards_class, 'price_class': price_class,'review_class': review_class, 'rat_class': rat_class, 'link_class': link_class}
+        rat_class = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]//preceding::div[1]').get_attribute(
+            'class')
+        divs_class = {'main_cards_class': main_cards_class, 'price_class': price_class, 'review_class': review_class,
+                      'rat_class': rat_class, 'link_class': link_class}
         driver.close()
         driver.quit()
         print(main_cards_class)
@@ -84,19 +93,27 @@ class ParserOzon(object):
                     if len(divs) > 4:
                         for div in divs:
                             link_pre = div.find_element(By.CLASS_NAME, link_class).get_attribute('href')
-                            card_code = link_pre[:link_pre.find('?') - 1].split('-')[-1] if len(link_pre[:link_pre.find('?') - 1].split('-')[-1]) < 10 else link_pre[:link_pre.find('?') - 1].split('/')[-1]
+                            card_code = link_pre[:link_pre.find('?') - 1].split('-')[-1] if len(
+                                link_pre[:link_pre.find('?') - 1].split('-')[-1]) < 10 else \
+                            link_pre[:link_pre.find('?') - 1].split('/')[-1]
                             if card_code not in set_cards_code:
                                 set_cards_code.add(card_code)
                                 try:
-                                    price = int(div.find_element(By.CLASS_NAME, price_class).text.replace('\u2009', '').replace('\n', '').split('₽')[0])
+                                    price = int(
+                                        div.find_element(By.CLASS_NAME, price_class).text.replace('\u2009', '').replace(
+                                            '\n', '').split('₽')[0])
                                 except:
-                                    price = int(div.find_element(By.XPATH, "//span[contains(text(), '₽')]").text.replace('\u2009', '').replace('\n', '').replace(' ', '').split('₽')[0])
+                                    price = int(
+                                        div.find_element(By.XPATH, "//span[contains(text(), '₽')]").text.replace(
+                                            '\u2009', '').replace('\n', '').replace(' ', '').split('₽')[0])
                                 try:
                                     review = div.find_element(By.CLASS_NAME, review_class).text.split()[0]
                                 except:
                                     review = 0
                                 try:
-                                    rat = ''.join(div.find_element(By.CLASS_NAME, rat_class).get_attribute('style').replace('width:', '').replace('%;', '').split())
+                                    rat = ''.join(
+                                        div.find_element(By.CLASS_NAME, rat_class).get_attribute('style').replace(
+                                            'width:', '').replace('%;', '').split())
                                 except:
                                     rat = 0
                                 result.append({
@@ -147,7 +164,8 @@ class ParserOzon(object):
                 driver.get(url)
                 time.sleep(random.uniform(3, 1))
                 try:
-                    result = json.loads(driver.page_source.strip('<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">'))
+                    result = json.loads(driver.page_source.strip(
+                        '<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">'))
                     num = result['widgetStates']
                     for i in num:
                         if 'webCurrentSeller' in i:
@@ -205,54 +223,57 @@ class ParserOzon(object):
                 pass
         return list(map(lambda x: tuple([rasdel, x]), unick_params))
 
-    def parser_with_params_little(self) -> list:
+    def parser_with_params_little(self, rasdel: str = None, quantity: int = None) -> list:
         unick_params = set()
         list_of_products = []
-        for rasdel in self.rasdels:
-            print(rasdel)
-            with sq.connect('db/parser_ozon.db') as con:
-                cursor = con.cursor()
-                num = 'codes_html'
-                sql_url = f'SELECT DISTINCT card_code FROM {num} WHERE rasdel == "{rasdel}"'
-                open_file = cursor.execute(sql_url).fetchall()[:2]
-                print(f'Всего будет записано {len(open_file)} карточкек')
-            caunter = 0
-            for product in open_file:
-                caunter += 1
-                product_code = product[0]
-                url = f'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=/product/{product_code}&layout_container=pdpPage2column&layout_page_index=2'
-                driver = Driver_Chrom().loadChrome()
-                driver.get(url)
-                time.sleep(random.uniform(3, 1))
-                try:
-                    result = json.loads(driver.page_source.strip('<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">'))
-                    num = result['widgetStates']
-                    for i in num:
-                        if 'webCurrentSeller' in i:
-                            saler_id_class = i
-                    saler = json.loads(result['widgetStates'][saler_id_class])
-                except:
-                    pass
-                try:
-                    key_params = list(filter(lambda x: 'webCharacteristics' in x, result['widgetStates']))[0]
-                    product_info = json.loads(result['widgetStates'][key_params])["characteristics"][0]['short']
-                    name = str(json.loads(result['widgetStates'][key_params])["productTitle"]).strip('Характеристики: ')
-                    sales_id = saler['id']
-                    sales_name = saler['name']
-                    sales_credentials = saler['credentials']
-                    for param in product_info:
-                        unick_params.add(param["name"])
-                        list_of_products.append((
-                            rasdel,
-                            product_code,
-                            name,
-                            sales_id,
-                            sales_name,
-                            ' '.join(sales_credentials),
-                            param["name"],
-                            param["values"][0]["text"]))
-                except:
-                    pass
+        print(rasdel)
+        with sq.connect('db/parser_ozon.db') as con:
+            cursor = con.cursor()
+            num = 'codes_html'
+            sql_url = f'SELECT DISTINCT card_code FROM {num} WHERE rasdel == "{rasdel}"'
+            if quantity is None:
+                open_file = cursor.execute(sql_url).fetchall()
+            else:
+                open_file = cursor.execute(sql_url).fetchall()[:quantity]
+        caunter = 0
+        for product in open_file:
+            caunter += 1
+            product_code = product[0]
+            url = f'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=/product/{product_code}&layout_container=pdpPage2column&layout_page_index=2'
+            driver = Driver_Chrom().loadChrome()
+            driver.get(url)
+            time.sleep(random.uniform(3, 1))
+            try:
+                result = json.loads(driver.page_source.strip(
+                    '<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">'))
+                num = result['widgetStates']
+                for i in num:
+                    if 'webCurrentSeller' in i:
+                        saler_id_class = i
+                saler = json.loads(result['widgetStates'][saler_id_class])
+            except:
+                pass
+            try:
+                key_params = list(filter(lambda x: 'webCharacteristics' in x, result['widgetStates']))[0]
+                product_info = json.loads(result['widgetStates'][key_params])["characteristics"][0]['short']
+                name = str(json.loads(result['widgetStates'][key_params])["productTitle"]).strip('Характеристики: ')
+                sales_id = saler['id']
+                sales_name = saler['name']
+                sales_credentials = saler['credentials']
+                for param in product_info:
+                    unick_params.add(param["name"])
+                    list_of_products.append((
+                        rasdel,
+                        product_code,
+                        name,
+                        sales_id,
+                        sales_name,
+                        ' '.join(sales_credentials),
+                        param["name"],
+                        param["values"][0]["text"]))
+            except:
+                pass
+
         return list_of_products
 
     def parser_other_pages(self, url_in: str = None, brand: str = None, category: str = None) -> list:
