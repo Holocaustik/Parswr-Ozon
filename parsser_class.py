@@ -1,6 +1,7 @@
 from __future__ import annotations
 import datetime
 import json
+from selenium.webdriver.support.wait import WebDriverWait
 from browser import Driver_Chrom
 import time
 import pandas as pd
@@ -71,6 +72,7 @@ class ParserOzon(object):
     def passer_from_url_without_params(self) -> list:
         divs_shurupovert, divs_usm = self.get_class_shurupovert(), self.get_classes_USM()
         date = datetime.date.today().strftime('%d. %m. %Y')
+        # date = ('27.09.2022')
         result = []
         set_cards_code = set()
         for key, url in self.rasdels.items():
@@ -82,13 +84,16 @@ class ParserOzon(object):
             review_class = divs_class['review_class']
             rat_class = divs_class['rat_class']
             driver = Driver_Chrom().loadChrome()
-            driver.get(f'{url}')
+            driver.get(url)
             for page in range(1, self.pages + 1):
                 print(f'Парсим {key} page {page}')
                 if check_end_page < 6:
-                    time.sleep(1.0)
                     find_class = f'//div[contains(@class, "{main_cards_class}")]'
-                    divs = driver.find_elements("xpath", find_class)
+                    time.sleep(0.4)
+                    divs = WebDriverWait(driver, 10).until(
+                        EC.presence_of_all_elements_located((By.XPATH, find_class))
+                    )
+                    # divs = driver.find_elements("xpath", find_class)
                     print(len(divs))
                     if len(divs) > 4:
                         for div in divs:
@@ -135,7 +140,10 @@ class ParserOzon(object):
                     break
                 try:
                     action = ActionChains(driver)
-                    button = driver.find_element("xpath", '//div[contains(text(), "Дальше")]')
+                    button = WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "Дальше")]'))
+                    )
+                    # button = driver.find_element("xpath", '//div[contains(text(), "Дальше")]')
                     action.move_to_element(to_element=button).click().perform()
                 except:
                     print('Не нашли кнопку')
@@ -153,10 +161,15 @@ class ParserOzon(object):
                 num = 'codes_html'
                 sql_url = f'SELECT DISTINCT card_code FROM {num} WHERE rasdel == "{rasdel}"'
                 open_file = cursor.execute(sql_url).fetchall()[:5]
-                print(f'Всего будет записано {len(open_file)} карточкек')
+                sql_url_two = f'SELECT DISTINCT code FROM {rasdel.replace(" ", "_")}_with_params'
+                print(sql_url_two)
+                open_file = cursor.execute(sql_url).fetchall()
+                open_file_two = cursor.execute(sql_url_two).fetchall()
+                result = list(filter(lambda x: x not in open_file_two, open_file))
+                print(f'Всего будет записано {len(result)} карточкек')
             list_of_products = []
             caunter = 0
-            for product in open_file:
+            for product in result:
                 caunter += 1
                 product_code = product[0]
                 url = f'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=/product/{product_code}&layout_container=pdpPage2column&layout_page_index=2'
@@ -194,6 +207,8 @@ class ParserOzon(object):
                     })
                 except:
                     pass
+                driver.close()
+                driver.quit()
             return list_of_products
 
     def parser_params(self, rasdel) -> list:
@@ -235,14 +250,16 @@ class ParserOzon(object):
                 open_file = cursor.execute(sql_url).fetchall()
             else:
                 open_file = cursor.execute(sql_url).fetchall()[:quantity]
+        print(f'Всего в группе {len(open_file)}')
         caunter = 0
         for product in open_file:
+            print(caunter)
             caunter += 1
             product_code = product[0]
             url = f'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=/product/{product_code}&layout_container=pdpPage2column&layout_page_index=2'
             driver = Driver_Chrom().loadChrome()
             driver.get(url)
-            time.sleep(random.uniform(3, 1))
+            time.sleep(random.uniform(1.5, 0.4))
             try:
                 result = json.loads(driver.page_source.strip(
                     '<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">'))
@@ -273,6 +290,8 @@ class ParserOzon(object):
                         param["values"][0]["text"]))
             except:
                 pass
+            driver.close()
+            driver.quit()
 
         return list_of_products
 
@@ -318,3 +337,25 @@ class ParserOzon(object):
     def save_to_excel(self, data: list | dict | tuple = None, name='ozon'):
         num = pd.DataFrame(data)
         num.to_excel(f'{name}.xlsx')
+
+    def get_class_from_page(self, url=None):
+        driver = Driver_Chrom().loadChrome()
+        driver.get(url)
+
+        return driver
+
+    def get_pars_page(self, driver=None, rasdel=None):
+        divs_shurupovert, divs_usm = self.get_class_shurupovert(), self.get_classes_USM()
+        date = datetime.date.today().strftime('%d. %m. %Y')
+        num = driver.page_source
+        divs_class = divs_usm if rasdel == 'УШМ' or rasdel == 'Видеонаблюдение' else divs_shurupovert
+        main_cards_class = divs_class['main_cards_class']
+        link_class = divs_class['link_class']
+        price_class = divs_class['price_class']
+        review_class = divs_class['review_class']
+        rat_class = divs_class['rat_class']
+        find_class = f'//div[contains(@class, "{main_cards_class}")]'
+        testik = driver.page_source
+        return testik
+
+

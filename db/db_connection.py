@@ -151,7 +151,7 @@ class DB_my_connection():
                     value TEXT
                 )""")
 
-    def insert_in_table_with_params_attributes(self, rasdel=None, my_dict=None):
+    def insert_in_table_with_params_attributes(self, rasdel: str = None, my_dict: list = None):
         print(my_dict)
         with sq.connect('db/parser_ozon.db') as con:
             cursor = con.cursor()
