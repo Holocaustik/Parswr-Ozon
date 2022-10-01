@@ -4,7 +4,7 @@ import undetected_chromedriver
 
 class Driver_Chrom():
     def __init__(self):
-        self.executable_path = '/Users/vladimirivliev/PycharmProjects/parser_ozon with_django/chromdirectory/chromedriver'
+        # self.executable_path = '/Users/vladimirivliev/PycharmProjects/parser_ozon with_django/chromdirectory/chromedriver'
         self.test_url = 'https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html'
         self.ozon = 'https://www.ozon.ru'
         self.asd = 'http://whatismyipaddress.com'

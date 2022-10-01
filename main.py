@@ -53,7 +53,6 @@ def main_parser():
         gs = GoogleSheet()
         gs.append_data(value_range_body=data, range="Все цены!A1:E1")
 
-
 def parser_params():
     # Ссыли для парсера
     urls = {
@@ -128,5 +127,7 @@ def parse_params():
         result = parser.parser_with_params()
         db.insert_in_table_with_params(rasdel=rasdel, my_dict=result)
 
+
 if __name__ == '__main__':
+    print('Here')
     main_parser()
