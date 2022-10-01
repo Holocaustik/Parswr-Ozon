@@ -9,7 +9,7 @@ class Driver_Chrom():
         self.ozon = 'https://www.ozon.ru'
         self.asd = 'http://whatismyipaddress.com'
 
-    def loadChrome(self, headless=False):
+    def loadChrome(self, headless=True):
         chrome_options = undetected_chromedriver.ChromeOptions()
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument("--window-size=1920x1080")
