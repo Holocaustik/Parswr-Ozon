@@ -130,6 +130,7 @@ class DB_my_connection():
 
     def insert_in_table_with_params(self, rasdel=None, my_dict=None):
         with sq.connect('db/parser_ozon.db') as con:
+
             cursor = con.cursor()
             for item in my_dict:
                 text_for_sql = f'INSERT INTO {rasdel}_with_params VALUES (NULL, {", ".join([":" + i for i in item])})'

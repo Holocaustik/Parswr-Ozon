@@ -9,7 +9,7 @@ class Driver_Chrom():
         self.ozon = 'https://www.ozon.ru'
         self.asd = 'http://whatismyipaddress.com'
 
-    def loadChrome(self):
+    def loadChrome(self, headless=False):
         chrome_options = undetected_chromedriver.ChromeOptions()
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument("--window-size=1920x1080")
@@ -20,5 +20,5 @@ class Driver_Chrom():
         ua = UserAgent()
         user_agent = "user-agent=" + ua.random
         chrome_options.add_argument(user_agent)
-        browser = undetected_chromedriver.Chrome(headless=False, options=chrome_options)
+        browser = undetected_chromedriver.Chrome(headless=headless, options=chrome_options)
         return browser

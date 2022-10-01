@@ -160,20 +160,18 @@ class ParserOzon(object):
                 cursor = con.cursor()
                 num = 'codes_html'
                 sql_url = f'SELECT DISTINCT card_code FROM {num} WHERE rasdel == "{rasdel}"'
-                open_file = cursor.execute(sql_url).fetchall()[:5]
                 sql_url_two = f'SELECT DISTINCT code FROM {rasdel.replace(" ", "_")}_with_params'
-                print(sql_url_two)
-                open_file = cursor.execute(sql_url).fetchall()
-                open_file_two = cursor.execute(sql_url_two).fetchall()
-                result = list(filter(lambda x: x not in open_file_two, open_file))
+                open_file = list(map(lambda x: int(x[0]), cursor.execute(sql_url).fetchall()))
+                open_file_two = list(map(lambda x: int(x[0]), cursor.execute(sql_url_two).fetchall()))
+                result = list(filter(lambda x: x not in open_file_two, open_file))[:3]
                 print(f'Всего будет записано {len(result)} карточкек')
             list_of_products = []
             caunter = 0
             for product in result:
                 caunter += 1
-                product_code = product[0]
+                product_code = product
                 url = f'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=/product/{product_code}&layout_container=pdpPage2column&layout_page_index=2'
-                driver = Driver_Chrom().loadChrome()
+                driver = Driver_Chrom().loadChrome(headless=True)
                 driver.get(url)
                 time.sleep(random.uniform(3, 1))
                 try:
@@ -202,7 +200,7 @@ class ParserOzon(object):
                         'name': name,
                         'sales_id': sales_id,
                         'sales_name': sales_name,
-                        'sales_credentials': sales_credentials,
+                        'sales_credentials': ' '.join(sales_credentials),
                         'params': params
                     })
                 except:
