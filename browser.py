@@ -11,12 +11,12 @@ class Driver_Chrom():
 
     def loadChrome(self, headless=True):
         chrome_options = undetected_chromedriver.ChromeOptions()
-        chrome_options.add_argument('--disable-dev-shm-usage')
-        chrome_options.add_argument("--window-size=1920x1080")
-        chrome_options.add_argument("--disable-notifications")
-        chrome_options.add_argument('--verbose')
-        chrome_options.add_argument('--disable-gpu')
-        chrome_options.add_argument('--disable-software-rasterizer')
+        # chrome_options.add_argument('--disable-dev-shm-usage')
+        # chrome_options.add_argument("--window-size=1920x1080")
+        # chrome_options.add_argument("--disable-notifications")
+        # chrome_options.add_argument('--verbose')
+        # chrome_options.add_argument('--disable-gpu')
+        # chrome_options.add_argument('--disable-software-rasterizer')
         # ua = UserAgent()
         # user_agent = "user-agent=" + ua.random
         # chrome_options.add_argument(user_agent)
