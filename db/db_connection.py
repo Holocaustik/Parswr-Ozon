@@ -23,6 +23,47 @@ class DB_my_connection():
                     product_price INTEGER
                 )""")
 
+    def create_table(self):
+        with sq.connect('db/parser_ozon.db') as con:
+            cursor = con.cursor()
+            text_for_create_table = f'CREATE TABLE IF NOT EXISTS params (id INTEGER PRIMARY KEY AUTOINCREMENT, radel TEXT, params TEXT)'
+            cursor.execute(text_for_create_table)
+            con.commit()
+
+    def create_table_with_params(self):
+        with sq.connect('db/parser_ozon.db') as con:
+            cursor = con.cursor()
+            text_for_create_table = f'CREATE TABLE IF NOT EXISTS {self.table_name}_with_params (id INTEGER PRIMARY KEY AUTOINCREMENT)'
+            cursor.execute(text_for_create_table)
+
+    def create_table_html(self):
+        with sq.connect('db/parser_ozon.db') as con:
+            cursor = con.cursor()
+            cursor.execute("""CREATE TABLE codes_html (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    rasdel TEXT,
+                    card_code INTEGER,
+                    review INTEGER DEFAULT 0,
+                    price INTEGER,
+                    rat REAL DEFAULT 0,
+                    date TEXT
+                )""")
+
+    def create_table_atribut_value(self):
+        with sq.connect('db/parser_ozon.db') as con:
+            cursor = con.cursor()
+            cursor.execute("""CREATE TABLE attributes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    rasdel TEXT,
+                    code INTEGER,
+                    name TEXT,
+                    sales_id INTEGER DEFAULT 0,
+                    sales_name TEXT,
+                    sales_credentials TEXT,
+                    attribute TEXT,
+                    value TEXT
+                )""")
+
     def insert_in_db(self, dict=None):
         with sq.connect('db/parser_ozon.db') as con:
             cursor = con.cursor()
@@ -41,13 +82,6 @@ class DB_my_connection():
                            )
                            """, dict)
 
-            con.commit()
-
-    def create_table(self):
-        with sq.connect('db/parser_ozon.db') as con:
-            cursor = con.cursor()
-            text_for_create_table = f'CREATE TABLE IF NOT EXISTS params (id INTEGER PRIMARY KEY AUTOINCREMENT, radel TEXT, params TEXT)'
-            cursor.execute(text_for_create_table)
             con.commit()
 
     def insert_in_db_params(self, dict):
@@ -80,12 +114,6 @@ class DB_my_connection():
 
             con.commit()
 
-    def create_table_with_params(self):
-        with sq.connect('db/parser_ozon.db') as con:
-            cursor = con.cursor()
-            text_for_create_table = f'CREATE TABLE IF NOT EXISTS {self.table_name}_with_params (id INTEGER PRIMARY KEY AUTOINCREMENT)'
-            cursor.execute(text_for_create_table)
-
     def add_column(self, column):
         with sq.connect('db/parser_ozon.db') as con:
             cursor = con.cursor()
@@ -97,19 +125,6 @@ class DB_my_connection():
             else:
                 print('Создание и добавление столбца!')
                 con.commit()
-
-    def create_table_html(self):
-        with sq.connect('db/parser_ozon.db') as con:
-            cursor = con.cursor()
-            cursor.execute("""CREATE TABLE codes_html (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    rasdel TEXT,
-                    card_code INTEGER,
-                    review INTEGER DEFAULT 0,
-                    price INTEGER,
-                    rat REAL DEFAULT 0,
-                    date TEXT
-                )""")
 
     def insert_in_db_codes_html(self, my_dict=None):
         with sq.connect('db/parser_ozon.db') as con:
@@ -136,21 +151,6 @@ class DB_my_connection():
                 text_for_sql = f'INSERT INTO {rasdel}_with_params VALUES (NULL, {", ".join([":" + i for i in item])})'
                 print(item)
                 cursor.execute(text_for_sql, item)
-
-    def create_table_atribut_value(self):
-        with sq.connect('db/parser_ozon.db') as con:
-            cursor = con.cursor()
-            cursor.execute("""CREATE TABLE attributes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    rasdel TEXT,
-                    code INTEGER,
-                    name TEXT,
-                    sales_id INTEGER DEFAULT 0,
-                    sales_name TEXT,
-                    sales_credentials TEXT,
-                    attribute TEXT,
-                    value TEXT
-                )""")
 
     def insert_in_table_with_params_attributes(self, rasdel: str = None, my_dict: list = None):
         print(my_dict)

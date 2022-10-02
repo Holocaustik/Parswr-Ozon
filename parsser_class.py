@@ -169,8 +169,7 @@ class ParserOzon(object):
             caunter = 0
             for product in result:
                 caunter += 1
-                product_code = product
-                url = f'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=/product/{product_code}&layout_container=pdpPage2column&layout_page_index=2'
+                url = f'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=/product/{product}&layout_container=pdpPage2column&layout_page_index=2'
                 driver = Driver_Chrom().loadChrome(headless=True)
                 driver.get(url)
                 time.sleep(random.uniform(3, 1))
@@ -196,7 +195,7 @@ class ParserOzon(object):
                         unick_params.add(param["name"])
                         params[param["name"]] = param["values"][0]["text"]
                     list_of_products.append({
-                        'code': product_code,
+                        'code': product,
                         'name': name,
                         'sales_id': sales_id,
                         'sales_name': sales_name,
@@ -334,26 +333,59 @@ class ParserOzon(object):
 
     def save_to_excel(self, data: list | dict | tuple = None, name='ozon'):
         num = pd.DataFrame(data)
-        num.to_excel(f'{name}.xlsx')
+        num.to_excel(f'{name}.xlsx', header=1)
 
-    def get_class_from_page(self, url=None):
-        driver = Driver_Chrom().loadChrome()
-        driver.get(url)
-
-        return driver
-
-    def get_pars_page(self, driver=None, rasdel=None):
-        divs_shurupovert, divs_usm = self.get_class_shurupovert(), self.get_classes_USM()
-        date = datetime.date.today().strftime('%d. %m. %Y')
-        num = driver.page_source
-        divs_class = divs_usm if rasdel == 'УШМ' or rasdel == 'Видеонаблюдение' else divs_shurupovert
-        main_cards_class = divs_class['main_cards_class']
-        link_class = divs_class['link_class']
-        price_class = divs_class['price_class']
-        review_class = divs_class['review_class']
-        rat_class = divs_class['rat_class']
-        find_class = f'//div[contains(@class, "{main_cards_class}")]'
-        testik = driver.page_source
-        return testik
-
-
+    def parser_with_params_test(self) -> list:
+        unick_params = set()
+        for rasdel in self.rasdels:
+            print(rasdel)
+            with sq.connect('db/parser_ozon.db') as con:
+                cursor = con.cursor()
+                num = 'codes_html'
+                sql_url = f'SELECT DISTINCT card_code FROM {num} WHERE rasdel == "{rasdel}"'
+                sql_url_two = f'SELECT DISTINCT code FROM {rasdel.replace(" ", "_")}_with_params'
+                open_file = list(map(lambda x: int(x[0]), cursor.execute(sql_url).fetchall()))
+                open_file_two = list(map(lambda x: int(x[0]), cursor.execute(sql_url_two).fetchall()))
+                result = list(filter(lambda x: x not in open_file_two, open_file))[:3]
+                print(f'Всего будет записано {len(result)} карточкек')
+            list_of_products = []
+            caunter = 0
+            for product in result:
+                caunter += 1
+                url = f'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=/product/{product}&layout_container=pdpPage2column&layout_page_index=2'
+                driver = Driver_Chrom().loadChrome(headless=True)
+                driver.get(url)
+                time.sleep(random.uniform(3, 1))
+                try:
+                    result = json.loads(driver.page_source.strip(
+                        '<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">'))
+                    num = result['widgetStates']
+                    for i in num:
+                        if 'webCurrentSeller' in i:
+                            saler_id_class = i
+                    saler = json.loads(result['widgetStates'][saler_id_class])
+                except:
+                    pass
+                try:
+                    key_params = list(filter(lambda x: 'webCharacteristics' in x, result['widgetStates']))[0]
+                    product_info = json.loads(result['widgetStates'][key_params])["characteristics"][0]['short']
+                    name = str(json.loads(result['widgetStates'][key_params])["productTitle"]).strip('Характеристики: ')
+                    sales_id = saler['id']
+                    sales_name = saler['name']
+                    sales_credentials = saler['credentials']
+                    my_list = {}
+                    for param in product_info:
+                        unick_params.add(param["name"])
+                        my_list[param["name"]] = param["values"][0]["text"]
+                    my_list['code'] = product
+                    my_list['name'] = name
+                    my_list['sales_id'] = sales_id
+                    my_list['sales_name'] = sales_name
+                    my_list['sales_credentials'] = ' '.join(sales_credentials)
+                    list_of_products.append(my_list)
+                except:
+                    pass
+                driver.close()
+                driver.quit()
+            print(list_of_products)
+            return list_of_products

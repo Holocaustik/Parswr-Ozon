@@ -47,8 +47,7 @@ def main_parser():
     # Запись на Гугл лист
     with sq.connect('db/parser_ozon.db') as con:
         cursor = con.cursor()
-        sql_query = f'SELECT card_code, review, price, rat, date  FROM codes_html WHERE date == (SELECT max(date) ' \
-                    f'from codes_html) '
+        sql_query = f'SELECT card_code, review, price, rat, date  FROM codes_html WHERE date == (SELECT max(date) from codes_html) '
         data = cursor.execute(sql_query).fetchall()
         gs = GoogleSheet()
         gs.append_data(value_range_body=data, range="Все цены!A1:E1")
@@ -84,11 +83,12 @@ def parser_params():
 
     }
 
-    for rasdel, url in urls.items():
-        parser = ParserOzon(rasdels=urls)
-        db = DB_my_connection()
-        result = parser.parser_with_params_little(rasdel=rasdel, quantity=None)
-        db.insert_in_table_with_params_attributes(my_dict=result)
+    for rasdel in urls:
+        with sq.connect('db/parser_ozon.db') as con:
+            cursor = con.cursor()
+            sql_query = f'SELECT *  FROM {rasdel}_with_params'
+            data = cursor.execute(sql_query).fetchall()
+            ParserOzon().save_to_excel(data=data, name=rasdel)
 
 def parse_params():
     # Ссыли для парсера
@@ -124,10 +124,9 @@ def parse_params():
     for rasdel, url in urls.items():
         parser = ParserOzon(rasdels=urls)
         db = DB_my_connection()
-        result = parser.parser_with_params()
+        result = parser.parser_with_params_test()
         db.insert_in_table_with_params(rasdel=rasdel, my_dict=result)
 
 
 if __name__ == '__main__':
-    print('Here')
-    main_parser()
+    parse_params()
