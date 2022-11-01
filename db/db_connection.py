@@ -145,12 +145,19 @@ class DB_my_connection():
 
     def insert_in_table_with_params(self, rasdel=None, my_dict=None):
         with sq.connect('db/parser_ozon.db') as con:
-
+            text_for_params_rasdel = f'SELECT params FROM params WHERE radel == "{rasdel}"'
             cursor = con.cursor()
-            for item in my_dict:
-                text_for_sql = f'INSERT INTO {rasdel}_with_params VALUES (NULL, {", ".join([":" + i for i in item])})'
-                print(item)
+            all_params = cursor.execute(text_for_params_rasdel).fetchall()
+            result = []
+            for i in my_dict:
+                num = []
+                for j in all_params:
+                    num.append(i.get(j[0], 'null'))
+                result.append(num)
+            for item in result:
+                text_for_sql = f'INSERT INTO {rasdel}_with_params VALUES (NULL, {", ".join(["?" for _ in range(len(all_params))])})'
                 cursor.execute(text_for_sql, item)
+            con.commit()
 
     def insert_in_table_with_params_attributes(self, rasdel: str = None, my_dict: list = None):
         print(my_dict)

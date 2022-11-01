@@ -12,8 +12,9 @@ class GoogleSheet:
     SPREADSHEET_ID = '1mu-ONFyjL0Sam3TRLuVPwxr7qC90k9Pspmp34P60AV8'
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     service = None
+    new_id = '1jkuLyTbRLN98RFLo35qbGH0FwAFcR_qhESe9DPO05wk'
 
-    def __init__(self):
+    def __init__(self, SPREADSHEET_ID=None, new_id=None):
         creds = None
         if os.path.exists('credentials/token.pickle'):
             with open('credentials/token.pickle', 'rb') as token:
@@ -29,7 +30,8 @@ class GoogleSheet:
                 creds = flow.run_local_server(port=0)
             with open('credentials/token.pickle', 'wb') as token:
                 pickle.dump(creds, token)
-
+        self.new_id = new_id
+        self.SPREADSHEET_ID = SPREADSHEET_ID
         self.credentials = creds
         self.service = build('sheets', 'v4', credentials=creds)
 
@@ -95,12 +97,20 @@ class GoogleSheet:
         endIndex = responce['values'].index([result]) + 1
         return endIndex
 
+    def get_links(self):
+        credentials = self.credentials
+        service = discovery.build('sheets', 'v4', credentials=credentials)
+        spreadsheet_id = self.new_id
+        sh = service.spreadsheets()
+        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Data!A2:A100').execute()
+        result = sorted(set(map(lambda x: x[0], responce['values'])))
+        return result[0]
+
 
 def main():
 
     gs = GoogleSheet()
-    endIndex = gs.get_first_date_from_my_googolist()
-    gs.delete_rows(endIndex=endIndex)
+    endIndex = gs.get_links()
 
 
 if __name__ == '__main__':
