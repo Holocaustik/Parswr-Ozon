@@ -2,6 +2,8 @@ import datetime
 import json
 import time
 from multiprocessing import Process
+
+import jmespath as jmespath
 from selenium.webdriver.common.by import By
 from parsser_class import ParserOzon
 from browser import Driver_Chrom
@@ -27,19 +29,23 @@ def main():
                         pre_name = name[index_HAMMER:]
                         if pre_name.count(' ') > 1:
                             end_index = pre_name = name[index_HAMMER + 7:].index(' ')
-                            name_done = name[index_HAMMER:end_index + index_HAMMER + 7].upper()
+                            name_done = name[index_HAMMER:end_index + index_HAMMER + 7].upper().strip(',')
                         else:
-                            name_done = pre_name.upper()
+                            name_done = pre_name.upper().strip(',')
                 except:
                     try:
                         price = j['atom']['price']['price'].strip(' ₽').strip(' ')
 
                     except:
                         pass
-            pre_name_sales = i['multiButton']['ozonSubtitle']['textAtomWithIcon']['text']
-            index_sales = pre_name_sales.index('продавец')
-            name_sales = pre_name_sales[index_sales:]
-            result.append(('OZON', name_sales.strip('продавец '), name_done, price, datetime.date.today().strftime('%d. %m. %Y')))
+            try:
+                pre_name_sales = i['multiButton']['ozonSubtitle']['textAtomWithIcon']['text']
+                index_sales = pre_name_sales.index('продавец')
+                name_sales = pre_name_sales[index_sales:]
+                if name_sales != '220 Вольт':
+                    result.append(('OZON', name_sales.strip('продавец '), name_done, price, datetime.date.today().strftime('%d. %m. %Y')))
+            except:
+                pass
 
         time.sleep(20)
     data = result
