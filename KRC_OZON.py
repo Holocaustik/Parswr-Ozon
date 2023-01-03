@@ -1,15 +1,11 @@
 import datetime
 import json
 import time
-from multiprocessing import Process
-
-import jmespath as jmespath
-from selenium.webdriver.common.by import By
-from parsser_class import ParserOzon
 from browser import Driver_Chrom
 from push_to_google_sheets import GoogleSheet
 
-def main():
+
+def krc_ozon():
     SPREADSHEET_ID = '1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU'
     driver = Driver_Chrom().loadChrome(headless=True)
     url_ozon = 'https://www.ozon.ru/api/composer-api.bx/page/json/v1?url=https://www.ozon.ru/brand/hammer-26303172/category/elektroinstrumenty-9857/'
@@ -28,10 +24,10 @@ def main():
                         index_HAMMER = name.upper().index('HAMMER ')
                         pre_name = name[index_HAMMER:]
                         if pre_name.count(' ') > 1:
-                            end_index = pre_name = name[index_HAMMER + 7:].index(' ')
-                            name_done = name[index_HAMMER:end_index + index_HAMMER + 7].upper().strip(',')
+                            end_index = name[index_HAMMER + 7:].index(' ')
+                            name_done = name[index_HAMMER:end_index + index_HAMMER + 7].upper().strip(',').strip().strip("  2x2Ач LiION").strip("   SDS+").strip("  1x1.5Ач LiION").replace("&#X2F;", "/").replace("&#34;", "")
                         else:
-                            name_done = pre_name.upper().strip(',')
+                            name_done = pre_name.upper().strip(',').strip().strip("  2x2Ач LiION").strip("   SDS+").strip("  1x1.5Ач LiION").replace("&#X2F;", "/").replace("&#34;", "")
                 except:
                     try:
                         price = j['atom']['price']['price'].strip(' ₽').strip(' ')
@@ -43,15 +39,17 @@ def main():
                 index_sales = pre_name_sales.index('продавец')
                 name_sales = pre_name_sales[index_sales:]
                 if name_sales != '220 Вольт':
-                    result.append(('OZON', name_sales.strip('продавец '), name_done, price, datetime.date.today().strftime('%d. %m. %Y')))
+                    pre_result = ('OZON', name_sales.strip('продавец '), name_done, price, datetime.date.today().strftime('%d. %m. %Y'))
+                    if pre_result not in result:
+                        result.append(pre_result)
             except:
                 pass
-
         time.sleep(20)
     data = result
     gs = GoogleSheet(SPREADSHEET_ID)
-    gs.append_data(value_range_body=data, range="парсер Озон!A1:E1")
+    gs.append_data(value_range_body=data, range="парсер OZON WB!A1:E1")
+
 
 if __name__ == "__main__":
-    main()
+    krc_ozon()
 

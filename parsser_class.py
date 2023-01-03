@@ -34,10 +34,12 @@ class ParserOzon(object):
         main_div = driver.find_element("xpath", '//span[contains(text(), "Углошлифовальная машина")]//ancestor::div[3]')
         main_cards_class = main_div.get_attribute('class')
         price_class = main_div.find_element("xpath", '//span[contains(text(), "₽")]').get_attribute('class').split()[0]
-        review_class_up = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]')
-        review_class = review_class_up.get_attribute('class')
-        rat_class = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]//preceding::div[1]').get_attribute(
-            'class')
+        # review_class_up = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]')
+        # review_class = review_class_up.get_attribute('class')
+        review_class = 'z7d'
+        # rat_class = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]//preceding::div[1]').get_attribute(
+        #     'class')
+        rat_class= 'z7d'
         divs_class = {'main_cards_class': main_cards_class, 'price_class': price_class, 'review_class': review_class,
                       'rat_class': rat_class, 'link_class': link_class}
         driver.close()
@@ -59,10 +61,12 @@ class ParserOzon(object):
                                        '//span[contains(text(), "Шуруповерт аккумуляторный")]//ancestor::div[2]')
         main_cards_class = main_div.get_attribute('class')
         price_class = main_div.find_element("xpath", '//span[contains(text(), "₽")]').get_attribute('class').split()[0]
-        review_class_up = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]')
-        review_class = review_class_up.get_attribute('class')
-        rat_class = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]//preceding::div[1]').get_attribute(
-            'class')
+        # review_class_up = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]')
+        # review_class = review_class_up.get_attribute('class')
+        review_class = 'z7d'
+        # rat_class = main_div.find_element("xpath", '//a[contains(text(), "отзывов")]//preceding::div[1]').get_attribute(
+        #     'class')
+        rat_class = 'z7d'
         divs_class = {'main_cards_class': main_cards_class, 'price_class': price_class, 'review_class': review_class,
                       'rat_class': rat_class, 'link_class': link_class}
         driver.close()

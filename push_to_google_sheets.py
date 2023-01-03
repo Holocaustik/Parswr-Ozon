@@ -30,7 +30,7 @@ class GoogleSheet:
                 creds = flow.run_local_server(port=0)
             with open('credentials/token.pickle', 'wb') as token:
                 pickle.dump(creds, token)
-        self.new_id = new_id
+
         self.SPREADSHEET_ID = SPREADSHEET_ID
         self.credentials = creds
         self.service = build('sheets', 'v4', credentials=creds)
@@ -103,6 +103,7 @@ class GoogleSheet:
         spreadsheet_id = self.new_id
         sh = service.spreadsheets()
         responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Data!A2:A100').execute()
+        print(responce)
         result = sorted(set(map(lambda x: x[0], responce['values'])))
         return result[0]
 

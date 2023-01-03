@@ -17,8 +17,8 @@ class Driver_Chrom():
         chrome_options.add_argument('--verbose')
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--disable-software-rasterizer')
-        ua = UserAgent()
-        user_agent = "user-agent=" + ua.random
-        chrome_options.add_argument(user_agent)
+        # ua = UserAgent(verify_ssl=False)
+        # user_agent = "user-agent=" + ua.random
+        # chrome_options.add_argument(user_agent)
         browser = undetected_chromedriver.Chrome(headless=headless, options=chrome_options)
         return browser
