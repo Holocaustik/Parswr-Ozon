@@ -1,10 +1,8 @@
-from fake_useragent import UserAgent
 import undetected_chromedriver
 
 
 class Driver_Chrom():
     def __init__(self):
-        # self.executable_path = '/Users/vladimirivliev/PycharmProjects/parser_ozon with_django/chromdirectory/chromedriver'
         self.test_url = 'https://intoli.com/blog/not-possible-to-block-chrome-headless/chrome-headless-test.html'
         self.ozon = 'https://www.ozon.ru'
         self.asd = 'http://whatismyipaddress.com'
@@ -15,10 +13,9 @@ class Driver_Chrom():
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--disable-notifications")
         chrome_options.add_argument('--verbose')
+        chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--disable-software-rasterizer')
-        # ua = UserAgent(verify_ssl=False)
-        # user_agent = "user-agent=" + ua.random
-        # chrome_options.add_argument(user_agent)
+
         browser = undetected_chromedriver.Chrome(headless=headless, options=chrome_options)
         return browser

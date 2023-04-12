@@ -1,16 +1,24 @@
 from __future__ import print_function
+import json
 import os.path
 import pickle
+from googleapiclient.http import MediaIoBaseUpload
+import google
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from pprint import pprint
 from googleapiclient import discovery
+from google.oauth2.credentials import Credentials
+import io
+from googleapiclient.errors import HttpError
+import requests
 
 
 class GoogleSheet:
     SPREADSHEET_ID = '1mu-ONFyjL0Sam3TRLuVPwxr7qC90k9Pspmp34P60AV8'
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
+              'https://www.googleapis.com/auth/drive']
     service = None
     new_id = '1jkuLyTbRLN98RFLo35qbGH0FwAFcR_qhESe9DPO05wk'
 
@@ -107,11 +115,105 @@ class GoogleSheet:
         result = sorted(set(map(lambda x: x[0], responce['values'])))
         return result[0]
 
+    def delete_all(self):
+
+        # Авторизация
+        credentials = self.credentials
+        service = build('sheets', 'v4', credentials=credentials)
+
+        # Идентификатор таблицы и листа
+        spreadsheet_id = '1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU'
+        sheet_id = 0  # номер листа (начинается с 0)
+        sheet_name = 'парсер OZON WB'  # название листа
+
+        # Очистка данных
+
+        if sheet_name:
+            sheet_metadata = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute().get('sheets', '')
+            for sheet in sheet_metadata:
+                print(sheet['properties']['title'])
+                if sheet['properties']['title'] == sheet_name:
+                    sheet_id = sheet['properties']['sheetId']
+                    print(sheet_id)
+                    break
+        body = {
+            "requests": [
+                {
+                    "updateCells": {
+                        "range": {
+                            "sheetId": sheet_id,
+                            "startRowIndex": 0,
+                            "endRowIndex": 2000,
+                            "startColumnIndex": 0,
+                            "endColumnIndex": 5
+                        },
+                        "fields": "userEnteredValue"
+                    }
+                }
+            ]
+        }
+        request = service.spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id, body=body).execute()
+
+    # Функция для загрузки файла по ссылке с Google Диска
+    def download_google_file(self, link, file_name):
+
+        try:
+            # Извлекаем ID файла из ссылки
+            file_id = link.split('/')[-2]
+            # Создаем клиента Google Drive API
+            credentials = Credentials.from_authorized_user_file("/Users/vladimirivliev/PycharmProjects/pythonProject1/credentials/credentials.json",
+                                                  ["https://www.googleapis.com/auth/drive"])
+            service = build('drive', 'v3', credentials=credentials)
+
+            # Запрашиваем информацию о файле
+            file = service.files().get(fileId=file_id).execute()
+            print('here1')
+
+            # Загружаем содержимое файла
+            download_url = file.get('exportLinks').get('application/pdf')
+            print('here')
+            if download_url:
+                response = requests.get(download_url)
+                # Сохраняем содержимое файла в файл на диск
+                with open(file_name, 'wb') as f:
+                    f.write(response.content)
+                print(f'Файл {file_name} успешно загружен.')
+            else:
+                print('Ссылка не содержит доступного формата для экспорта файла.')
+        except HttpError as error:
+            print(f'Произошла ошибка: {error}')
+        except Exception as error:
+            print(f'Произошла ошибка: {error}')
+
+        # Устанавливаем учетные данные для доступа к API Google
+        creds = None
+        creds_file_path = '/Users/vladimirivliev/PycharmProjects/pythonProject1/credentials/credentials.json'
+        if creds_file_path:
+            with open(creds_file_path, 'r') as f:
+                creds = google.oauth2.credentials.Credentials.from_authorized_user_info(json.load(f))
+
+    def save_scrinchot(self, image_bytes, file_name):
+        DRIVE_FOLDER_ID = '1H7tc9yEu1S1Ix7IkdaPLZUiCPNJl1Ry1'
+        file_metadata = {'name': file_name, 'parents': [DRIVE_FOLDER_ID]}
+        service = build('drive', 'v3', credentials=self.credentials)
+        with io.BytesIO(image_bytes) as image_buffer:
+            media = MediaIoBaseUpload(image_buffer, mimetype='image/png')
+            file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+            print(f'File ID: {file.get("id")}')
+        # Создаем медиа-файл для загрузки:
+
+        # media = MediaIoBaseUpload(file, mimetype='png/plain')
+        #
+        # # Загружаем файл на Google Диск:
+        # file = drive_service.files().create(body=file_metadata, media_body=media,
+        #                                     fields='id').execute()
+
+        print('File ID: %s' % file.get('id'))
+
 
 def main():
-
     gs = GoogleSheet()
-    endIndex = gs.get_links()
+    gs.save_scrinchot()
 
 
 if __name__ == '__main__':

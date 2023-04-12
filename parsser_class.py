@@ -280,4 +280,5 @@ class ParserOzon(object):
 
     def save_to_excel(self, data: list | dict | tuple = None, name='ozon'):
         num = pd.DataFrame(data)
+        print(num)
         num.to_excel(f'{name}.xlsx', header=1)

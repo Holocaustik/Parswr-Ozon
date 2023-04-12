@@ -146,3 +146,17 @@ def parse_params():
 
 if __name__ == '__main__':
     main_parser()
+
+
+from KRC import ParserKRC
+
+import schedule
+
+def job():
+    ParserKRC().main()
+
+schedule.every().day.at("08:28:00").do(job)
+
+
+while True:
+    schedule.run_pending()

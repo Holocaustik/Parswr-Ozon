@@ -1,15 +1,13 @@
 import datetime
 import json
 import time
-
 from selenium.webdriver.common.by import By
-
 from browser import Driver_Chrom
 from push_to_google_sheets import GoogleSheet
 
 
 def parser_VI(): 
-    brand_list = ['vihr-1007', 'zubr-665', 'interskol-19']
+    brand_list = ['vihr-1007', 'zubr-665', 'interskol-19', 'hammer---2088444']
     SPREADSHEET_ID = '1gZ6PBDwoROytLXYvdjuGLMNy1Jx6dlIUxYFs6O_8t74'
     result = []
     for brand in brand_list:
@@ -18,10 +16,7 @@ def parser_VI():
         driver.get(url)
         time.sleep(2)
         last_page = min(int(driver.find_elements(By.XPATH, '//a[@class="number"]')[-1].text), 50)
-        driver.close()
-        driver.quit()
         for page in range(1, last_page):
-            driver = Driver_Chrom().loadChrome(headless=True)
             if page > 1:
                 url = f'https://spb.vseinstrumenti.ru/brand/{brand}/page{page}/?asc=desc&orderby=price'
             else:
@@ -39,8 +34,8 @@ def parser_VI():
                     price = 0
                 date = datetime.date.today().strftime('%d. %m. %Y')
                 result.append([brand, name, price, date])
-            driver.close()
-            driver.quit()
+    driver.close()
+    driver.quit()
 
     data = result
     gs = GoogleSheet(SPREADSHEET_ID)
