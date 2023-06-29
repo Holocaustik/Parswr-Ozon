@@ -2,8 +2,8 @@ import datetime
 import json
 import re
 import time
-from pprint import pprint
 import base64
+from pprint import pprint
 import jmespath
 from selenium.webdriver.common.by import By
 from browser import Driver_Chrom
@@ -16,6 +16,7 @@ class ParserKRC():
         self.SPREADSHEET_ID = '1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU'
         # self.url_ozon = 'https://www.ozon.ru/api/composer-api.bx/page/json/v1?url=https://www.ozon.ru/category/elektroinstrumenty-9857/hammer-26303172/'
         self.url_ozon = 'https://www.ozon.ru/api/composer-api.bx/page/json/v1?url=https://www.ozon.ru/brand/hammer-26303172/'
+        # self.url_ozon = 'https://www.ozon.ru/api/composer-api.bx/page/json/v1?url=https://www.ozon.ru/brand/zubr-26303502/category/instrumenty-dlya-remonta-i-stroitelstva-9856/'
         # self.url_ozon = 'https://www.ozon.ru/api/composer-api.bx/page/json/v1?url=https://www.ozon.ru/brand/ferm-87317356/'
         # self.url_ozon = 'https://www.ozon.ru/api/composer-api.bx/page/json/v1?url=https://www.ozon.ru/brand/ingco-72464691/'
         self.clean_json_ozon = '<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">'
@@ -55,6 +56,11 @@ class ParserKRC():
         self.name_xpath_holodilnik = ".//div[@class = 'product-name']"
         self.price_xpath_holodilnik = ".//meta[@itemprop = 'price']"
 
+        self.url_maxidom = 'https://www.maxidom.ru/search/catalog/?q=hammer'
+        self.cards_xpath_maxidom = "//article[contains(@class, 'item-list group b-catalog-list-product')]"
+        self.name_xpath_maxidom = ".//a[@itemprop = 'name']"
+        self.price_xpath_maxidom = ".//span[@class = 'b-catalog-list-product__price']"
+
     def find_name(self, full_name: str = '') -> str:
         test_name = re.search("[A-ZА-Я]+[0-9/]+[/A-ZА-Я0-9]+",full_name.replace('&amp;#x2F;', '/').replace('&#x2F;', ''))
         test_name_1 = re.search("[A-ZА-Я]+[0-9/]+", full_name.replace('&#x2F;', ''))
@@ -68,7 +74,7 @@ class ParserKRC():
         result = []
         unic_code = set()
         flag = True
-        for page in range(1, 40):
+        for page in range(1, 140):
             print(f'Page {page}')
             if flag:
                 try:
@@ -77,6 +83,7 @@ class ParserKRC():
                     all_json = json.loads(driver.page_source.strip(self.clean_json_ozon))
                     check = [x for x, y in all_json['catalog']['searchResultsV2'].items()]
                     res = jmespath.search(self.jmespath_ozon, all_json['catalog']['searchResultsV2'][check[0]])
+                    # pprint(all_json)
                     for item in res:
                         try:
                             item_code = item[2][0]
@@ -155,17 +162,16 @@ class ParserKRC():
         for href in all_links:
             driver.get(href)
             time.sleep(2)
-            name = self.find_name(driver.find_element(By.XPATH, self.name_xpath).text)
-            print(name)
             try:
                 driver.find_element(By.XPATH, self.card_ofers).click()
                 time.sleep(1)
                 ofers_check = driver.find_elements(By.XPATH, self.offers)
                 for offer in ofers_check:
                     try:
+                        name = self.find_name(driver.find_element(By.XPATH, self.name_xpath).text)
                         seller = offer.find_element(By.XPATH, self.seller_xpath).text
                         price = offer.find_element(By.XPATH, self.price_xpath).text
-                        print(seller, price)
+                        print(seller, name, price)
                         if f'{seller}{name}' not in unik_name:
                             result.append(('SBER', seller, name, price, datetime.date.today().strftime('%d.%m.%Y')))
                             unik_name.add(f'{seller}{name}')
@@ -319,7 +325,26 @@ class ParserKRC():
         gs.append_data(value_range_body=result, range="парсер OZON WB!A1:E1")
         return result
 
+    def parser_maxidom(self, driver=None):
+        driver = driver if driver else Driver_Chrom().loadChrome(headless=True)
+        result = []
+        for page in range(1, 10):
+            driver.get(f'{self.url_maxidom}&PAGEN_1={page}')
+            time.sleep(1)
+            all_cards = driver.find_elements(By.XPATH, self.cards_xpath_maxidom)
+            try:
+                for card in all_cards:
+                    full_name = card.find_element(By.XPATH, self.name_xpath_maxidom).text
+                    name = self.find_name(full_name)
+                    price = card.find_element(By.XPATH, self.price_xpath_maxidom).text.replace(' ', '')
+                    result.append(('Maxidom', 'Maxidom', name, price, datetime.date.today().strftime('%d. %m. %Y')))
+            except:
+                break
+        gs = GoogleSheet(self.SPREADSHEET_ID)
+        gs.append_data(value_range_body=result, range="парсер OZON WB!A1:E1")
+
     def main(self):
+        GoogleSheet().delete_all()
         driver = Driver_Chrom().loadChrome(headless=True)
         # self.parser_ozon_LEX(driver)
         self.parser_ozon(driver)
@@ -329,10 +354,12 @@ class ParserKRC():
         self.parserMvideo(driver)
         self.parser_sber(driver)
         self.parser_eldorado(driver)
+        self.parser_maxidom(driver)
         self.parser_holodilnik(driver)
         driver.close()
         driver.quit()
+        GoogleSheet().parse_and_append_data()
 
 
 if __name__ == "__main__":
-    ParserKRC().parser_ozon()
+    ParserKRC().main()

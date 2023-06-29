@@ -13,21 +13,25 @@ from google.oauth2.credentials import Credentials
 import io
 from googleapiclient.errors import HttpError
 import requests
-
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 class GoogleSheet:
     SPREADSHEET_ID = '1mu-ONFyjL0Sam3TRLuVPwxr7qC90k9Pspmp34P60AV8'
+    order_plan_sheet_id = '18K6ZiZ5YIDP_yOe5GfxYHK3g_2lqwO2GnvHxTIbqGpU'
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
               'https://www.googleapis.com/auth/drive']
+
+    scope = ['https://spreadsheets.google.com/feeds',
+             'https://www.googleapis.com/auth/drive']
     service = None
     new_id = '1jkuLyTbRLN98RFLo35qbGH0FwAFcR_qhESe9DPO05wk'
 
-    def __init__(self, SPREADSHEET_ID=None, new_id=None):
+    def __init__(self, SPREADSHEET_ID=new_id, new_id=order_plan_sheet_id):
         creds = None
         if os.path.exists('credentials/token.pickle'):
             with open('credentials/token.pickle', 'rb') as token:
                 creds = pickle.load(token)
-
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
@@ -38,10 +42,33 @@ class GoogleSheet:
                 creds = flow.run_local_server(port=0)
             with open('credentials/token.pickle', 'wb') as token:
                 pickle.dump(creds, token)
-
+        self.order_plan_sheet_id = new_id
         self.SPREADSHEET_ID = SPREADSHEET_ID
         self.credentials = creds
         self.service = build('sheets', 'v4', credentials=creds)
+
+    def move_data_between_sheets(self):
+        # Указываем информацию для аутентификации
+        scope = ['https://spreadsheets.google.com/feeds',
+                 'https://www.googleapis.com/auth/drive']
+        credentials = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+
+        # Авторизуемся и открываем книгу
+        client = gspread.authorize(credentials)
+        workbook = client.open_by_key('1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU')
+
+        # Получаем исходный и целевой листы
+        source_sheet = workbook.worksheet('парсер Озон')
+        destination_sheet = workbook.worksheet('Общий парсер')
+
+        # Получаем все данные с исходного листа
+        data = source_sheet.get_all_values()
+
+        # Добавляем данные в конец целевого листа
+        destination_sheet.append_rows(data)
+
+        print('Данные успешно перенесены.')
+
 
     def updateRangeValues(self, range, values):
         data = [{
@@ -108,12 +135,34 @@ class GoogleSheet:
     def get_links(self):
         credentials = self.credentials
         service = discovery.build('sheets', 'v4', credentials=credentials)
-        spreadsheet_id = self.new_id
+        spreadsheet_id = self.order_plan_sheet_id
         sh = service.spreadsheets()
-        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Data!A2:A100').execute()
-        print(responce)
-        result = sorted(set(map(lambda x: x[0], responce['values'])))
-        return result[0]
+        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Тест!A1:X2').execute()
+        # print(responce['values'])
+        sales_plan = {
+            "Product": {}
+        }
+        product_code = int(responce['values'][1][0])
+        print(product_code)
+        sales = {date: int(sale) for date, sale in zip(responce['values'][0][1:], responce['values'][1][1:])}
+        sales_plan["Product"][product_code] = {"Month": sales}
+        print(sales_plan)
+        return sales_plan
+
+    def get_sales_plan(self):
+        credentials = self.credentials
+        service = discovery.build('sheets', 'v4', credentials=credentials)
+        spreadsheet_id = self.order_plan_sheet_id
+        sh = service.spreadsheets()
+        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Прогноз продаж!C1:Z1500').execute()
+        sales_plan = {
+            "Product": {}
+        }
+        for i in range(1, len(responce["values"])):
+            product_code = int(responce['values'][i][0])
+            sales = {date: int(sale) for date, sale in zip(responce['values'][0][1:], responce['values'][i][1:])}
+            sales_plan["Product"][product_code] = {"Month": sales}
+        return sales_plan
 
     def delete_all(self):
 
@@ -143,7 +192,7 @@ class GoogleSheet:
                         "range": {
                             "sheetId": sheet_id,
                             "startRowIndex": 0,
-                            "endRowIndex": 2000,
+                            "endRowIndex": 6000,
                             "startColumnIndex": 0,
                             "endColumnIndex": 5
                         },
@@ -200,20 +249,42 @@ class GoogleSheet:
             media = MediaIoBaseUpload(image_buffer, mimetype='image/png')
             file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
             print(f'File ID: {file.get("id")}')
-        # Создаем медиа-файл для загрузки:
 
-        # media = MediaIoBaseUpload(file, mimetype='png/plain')
-        #
-        # # Загружаем файл на Google Диск:
-        # file = drive_service.files().create(body=file_metadata, media_body=media,
-        #                                     fields='id').execute()
+    def parse_and_append_data(self):
 
-        print('File ID: %s' % file.get('id'))
+        # Получаем данные из диапазона I:Q на листе "парсер Озон"
+        source_range = "'парсер Озон'!I:Q"
+        source_data = self.service.spreadsheets().values().get(
+            spreadsheetId ='1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU',
+            range=source_range
+        ).execute()
+        values = source_data.get('values', [])
+        if not values:
+            print('Нет данных для копирования.')
+            return
 
+        # Преобразуем данные в нужный формат
+        target_values = []
+        for row in values:
+            target_values.append(row[:9])  # Берем только первые 9 столбцов для вставки в диапазон A:I
+
+        # Вставляем данные в конец таблицы на листе "Общий парсер"
+        target_range = 'Общий парсер!A:I'
+        target_data = {
+            'values': target_values
+        }
+        request = self.service.spreadsheets().values().append(
+            spreadsheetId='1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU',
+            range=target_range,
+            valueInputOption='USER_ENTERED',
+            body=target_data
+        ).execute()
+
+        print('Данные успешно скопированы и вставлены.')
 
 def main():
     gs = GoogleSheet()
-    gs.save_scrinchot()
+    gs.get_sales_plan()
 
 
 if __name__ == '__main__':

@@ -26,11 +26,8 @@ class ParserOzon(object):
         driver.get(url)
         time.sleep(1)
         name_class_find = driver.find_element("xpath", '//span[contains(text(), "Углошлифовальная машина")]')
-        link_class = \
-            driver.find_element("xpath", '//a[contains(@class, "tile-hover-target")]').get_attribute('class').split()[1]
-        name_class = driver.find_element("xpath",
-                                         '//span[contains(text(), "Углошлифовальная машина")]//preceding::span[1]').get_attribute(
-            'class')
+        link_class = driver.find_element("xpath", '//a[contains(@class, "tile-hover-target")]').get_attribute('class').split()[1]
+        name_class = driver.find_element("xpath", '//span[contains(text(), "Углошлифовальная машина")]//preceding::span[1]').get_attribute('class')
         main_div = driver.find_element("xpath", '//span[contains(text(), "Углошлифовальная машина")]//ancestor::div[3]')
         main_cards_class = main_div.get_attribute('class')
         price_class = main_div.find_element("xpath", '//span[contains(text(), "₽")]').get_attribute('class').split()[0]
@@ -44,7 +41,7 @@ class ParserOzon(object):
                       'rat_class': rat_class, 'link_class': link_class}
         driver.close()
         driver.quit()
-        print(main_cards_class)
+        print(divs_class)
         return divs_class
 
     # Находит классы для страниц, с четырьмя карточками в столбце
@@ -282,3 +279,5 @@ class ParserOzon(object):
         num = pd.DataFrame(data)
         print(num)
         num.to_excel(f'{name}.xlsx', header=1)
+
+ParserOzon().parser_with_params('УШМ')

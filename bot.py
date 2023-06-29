@@ -32,7 +32,6 @@ def message_reply(message):
     if message.text == "Запустить все":
         if __name__ == '__main__':
             bot.send_message(message.chat.id, 'Начали парсить все')
-            GoogleSheet().delete_all()
             ParserKRC().main()
             bot.send_message(message.chat.id, 'Закончили парсить ')
     if message.text == "Запустить Ozon":

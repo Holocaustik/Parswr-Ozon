@@ -7,7 +7,7 @@ from push_to_google_sheets import GoogleSheet
 
 
 def parser_VI(): 
-    brand_list = ['vihr-1007', 'zubr-665', 'interskol-19', 'hammer---2088444']
+    brand_list = ['vihr-1007', 'zubr-665', 'interskol-19', 'hammer---2088444', 'champion-602/', 'husqvarna-4/', 'patriot-426/', 'greenworks-13753/', 'condtrol-649/', 'ada-890/']
     SPREADSHEET_ID = '1gZ6PBDwoROytLXYvdjuGLMNy1Jx6dlIUxYFs6O_8t74'
     result = []
     for brand in brand_list:
@@ -43,4 +43,13 @@ def parser_VI():
 
 
 if __name__ == "__main__":
-    parser_VI()
+    while True:
+        now = time.localtime()
+        if now.tm_hour == 9 and now.tm_min == 32 and now.tm_sec == 0:
+            parser_VI()
+            # Добавьте паузу, чтобы избежать множественного запуска в указанное время
+            time.sleep(60)  # Подождите 60 секунд перед следующей проверкой
+        else:
+            # Добавьте паузу, чтобы избежать непрерывной проверки времени
+            time.sleep(1)  # Подождите 1 секунду перед следующей проверкой
+
