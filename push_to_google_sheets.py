@@ -289,10 +289,8 @@ class GoogleSheet:
         if sheet_name:
             sheet_metadata = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute().get('sheets', '')
             for sheet in sheet_metadata:
-                print(sheet['properties']['title'])
                 if sheet['properties']['title'] == sheet_name:
                     sheet_id = sheet['properties']['sheetId']
-                    print(sheet_id)
                     break
         body = {
             "requests": [

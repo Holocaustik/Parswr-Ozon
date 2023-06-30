@@ -7,70 +7,18 @@ from statistics import mean
 order_plan = {}
 coming_plan = {}
 current_stock = GoogleSheet().get_current_stock()
-# sales_plan = {
-#     "Product": {
-#         628168: {
-#             "Month": {
-#                 "30.06.2023": 160,
-#                 "31.07.2023": 187,
-#                 "31.08.2023": 147,
-#                 "30.09.2023": 131,
-#                 "31.10.2023": 131,
-#                 "30.11.2023": 165,
-#                 "31.12.2023": 125,
-#                 "31.01.2024": 140,
-#                 "29.02.2024": 135,
-#                 "31.03.2024": 113,
-#                 "30.04.2024": 220,
-#                 "31.05.2024": 160,
-#                 "30.06.2024": 134,
-#                 "31.07.2024": 154,
-#                 "31.08.2024": 147,
-#                 "30.09.2024": 131,
-#                 "31.10.2024": 131,
-#                 "30.11.2024": 250,
-#                 "31.12.2024": 200,
-#                 "31.01.2025": 80,
-#                 "28.02.2025": 140,
-#                 "31.03.2025": 180,
-#                 "30.04.2025": 240,
-#                 "31.05.2025": 300,
-#             }
-#         },
-#         28168: {
-#             "Month": {
-#                 "30.06.2023": 134,
-#                 "31.07.2023": 154,
-#                 "31.08.2023": 147,
-#                 "30.09.2023": 131,
-#                 "31.10.2023": 131,
-#                 "30.11.2023": 165,
-#                 "31.12.2023": 125,
-#                 "31.01.2024": 140,
-#                 "29.02.2024": 135,
-#                 "31.03.2024": 113,
-#                 "30.04.2024": 109,
-#                 "31.05.2024": 105,
-#                 "30.06.2024": 134,
-#                 "31.07.2024": 154,
-#                 "31.08.2024": 147,
-#                 "30.09.2024": 131,
-#                 "31.10.2024": 131}
-#                 }
-#     }
-#     }
-# current_orderes = {'Product': {628168:{'Month': {"31.10.2023": 100, }}, 28168:{'Month': {"30.09.2023": 1000}}}}
 current_orderes = GoogleSheet().get_current_orders()
 sales_plan = GoogleSheet().get_sales_plan()
 
 
 def supper(sales_plan, n) -> dict:
     result = []
+
     for item, sales in sales_plan["Product"].items():
         num = pupper_test(sales, item, n)
-        result.append(num)
+        result.append(num[0])
     GoogleSheet().delete_orders()
-    GoogleSheet().append_orders(range="Моделирование!A1:W1", value_range_body=result)
+    GoogleSheet().append_orders(range="Остатки прогнозные!A1:W1", value_range_body=result)
     # save_list_to_excel(result, "orders.xlsx")
     return ""
 
@@ -95,6 +43,7 @@ def pupper_test(data, item, n):
     new_list = []
     turnower_list = []
     counter = 5
+    planovie_zakazi = []
     sales_list = list(data["Month"].values())
     sales_date_list = list(data["Month"].keys())
     carant_stock = current_stock.get(item, 0)
@@ -111,19 +60,22 @@ def pupper_test(data, item, n):
         new_order = 0
         if len(new_list) > n:
             avg_stock = mean(new_list[i - n:i])
-            sum_sales = round(sum(sales_list[i:i + n]))
+            sum_sales = round(sum(sales_list[i - n:i]))
             turnower = avg_stock / max(1, sum_sales) * n
             turnower_list.append([sales_date_list[i], turnower])
             if turnower < n:
                 if counter >= n:
                     new_order = round(sum(sales_list[i:i + n + 2]), -2)
                     order_plan[item]["Month"][sales_date_list[i - n]] = new_order
+                    print([item, sales_date_list[i - n], new_order])
+                    GoogleSheet().append_orders(range="Новые заказы!A1:C1", value_range_body=[item, sales_date_list[i - n], new_order])
+
                     carant_stock += new_order
                     coming_plan[item]["Month"][sales_date_list[i]] = new_order
                     counter = 0
                 else:
                     counter += 1
-        print(f'Дата: {sales_date_list[i]}, Текущий сток: {carant_stock} ,  Оборачиваемость {turnower}, Продажи {sales_list[i]}, средние остатки {avg_stock}, Сумма продаж {sum_sales}, получили заказ  {new_order}')
+        # print(f'Дата: {sales_date_list[i]}, Текущий сток: {carant_stock} ,  Оборачиваемость {turnower}, Продажи {sales_list[i]}, средние остатки {avg_stock}, Сумма продаж {sum_sales}, получили заказ  {new_order}')
 
     return result_for_table
 
