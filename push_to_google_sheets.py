@@ -70,6 +70,18 @@ class GoogleSheet:
         print('Данные успешно перенесены.')
 
 
+    def updateOrders(self, range, values):
+        data = [{
+            'range': range,
+            'values': values
+        }]
+        body = {
+            'valueInputOption': 'USER_ENTERED',
+            'data': data
+        }
+        result = self.service.spreadsheets().values().clear(spreadsheetId=self.order_plan_sheet_id, body=body).execute()
+        print('{0} cells updated.'.format(result.get('totalUpdatedCells')))
+
     def updateRangeValues(self, range, values):
         data = [{
             'range': range,
@@ -90,6 +102,34 @@ class GoogleSheet:
 
         # The ID of the spreadsheet to update.
         spreadsheet_id = self.SPREADSHEET_ID  # TODO: Update placeholder value.
+
+        # The A1 notation of a range to search for a logical table of data.
+        # Values will be appended after the last row of the table.
+        range_ = range # TODO: Update placeholder value.
+
+        # How the input data should be interpreted.
+        value_input_option = 'USER_ENTERED'  # TODO: Update placeholder value.
+
+        # How the input data should be inserted.
+        insert_data_option = 'INSERT_ROWS'  # TODO: Update placeholder value.
+
+        value_range_body = value_range_body
+
+        request = service.spreadsheets().values().append(spreadsheetId=spreadsheet_id, range=range,
+                                                         valueInputOption=value_input_option,
+                                                         insertDataOption=insert_data_option, body={'values': value_range_body})
+        response = request.execute()
+
+        # TODO: Change code below to process the `response` dict:
+        pprint(response)
+
+    def append_orders(self, range: str = None, value_range_body: list = None):
+
+        credentials = self.credentials
+        service = discovery.build('sheets', 'v4', credentials=credentials)
+
+        # The ID of the spreadsheet to update.
+        spreadsheet_id = self.order_plan_sheet_id  # TODO: Update placeholder value.
 
         # The A1 notation of a range to search for a logical table of data.
         # Values will be appended after the last row of the table.
@@ -164,6 +204,36 @@ class GoogleSheet:
             sales_plan["Product"][product_code] = {"Month": sales}
         return sales_plan
 
+    def get_current_stock(self):
+        credentials = self.credentials
+        service = discovery.build('sheets', 'v4', credentials=credentials)
+        spreadsheet_id = self.order_plan_sheet_id
+        sh = service.spreadsheets()
+        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Остатки ОТ импорт!A3:B1000').execute()
+        current_stock = {}
+        for i in range(1, len(responce["values"])):
+            product_code = int(responce['values'][i][0])
+            stock =  responce['values'][i][1]
+            current_stock[product_code] = stock
+        return current_stock
+
+    def get_current_orders(self):
+        credentials = self.credentials
+        service = discovery.build('sheets', 'v4', credentials=credentials)
+        spreadsheet_id = self.order_plan_sheet_id
+        sh = service.spreadsheets()
+        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Тест!A2:C1000').execute()
+        current_orders = {
+            "Product": {}
+        }
+        for i in range(1, len(responce["values"])):
+            product_code = int(responce['values'][i][0])
+            date = responce['values'][i][1]
+            order = responce['values'][i][2]
+            result = {date: order}
+            current_orders["Product"][product_code] = {"Month": result}
+        return current_orders
+
     def delete_all(self):
 
         # Авторизация
@@ -195,6 +265,45 @@ class GoogleSheet:
                             "endRowIndex": 6000,
                             "startColumnIndex": 0,
                             "endColumnIndex": 5
+                        },
+                        "fields": "userEnteredValue"
+                    }
+                }
+            ]
+        }
+        request = service.spreadsheets().batchUpdate(spreadsheetId=spreadsheet_id, body=body).execute()
+
+    def delete_orders(self):
+
+        # Авторизация
+        credentials = self.credentials
+        service = build('sheets', 'v4', credentials=credentials)
+
+        # Идентификатор таблицы и листа
+        spreadsheet_id = '18K6ZiZ5YIDP_yOe5GfxYHK3g_2lqwO2GnvHxTIbqGpU'
+        sheet_id = 0  # номер листа (начинается с 0)
+        sheet_name = 'Моделирование'  # название листа
+
+        # Очистка данных
+
+        if sheet_name:
+            sheet_metadata = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute().get('sheets', '')
+            for sheet in sheet_metadata:
+                print(sheet['properties']['title'])
+                if sheet['properties']['title'] == sheet_name:
+                    sheet_id = sheet['properties']['sheetId']
+                    print(sheet_id)
+                    break
+        body = {
+            "requests": [
+                {
+                    "updateCells": {
+                        "range": {
+                            "sheetId": sheet_id,
+                            "startRowIndex": 0,
+                            "endRowIndex": 6000,
+                            "startColumnIndex": 0,
+                            "endColumnIndex": 30
                         },
                         "fields": "userEnteredValue"
                     }
@@ -284,7 +393,7 @@ class GoogleSheet:
 
 def main():
     gs = GoogleSheet()
-    gs.get_sales_plan()
+    gs.get_current_orders()
 
 
 if __name__ == '__main__':
