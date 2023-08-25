@@ -29,8 +29,8 @@ class GoogleSheet:
 
     def __init__(self, SPREADSHEET_ID=new_id, new_id=order_plan_sheet_id):
         creds = None
-        if os.path.exists('credentials/token.pickle'):
-            with open('credentials/token.pickle', 'rb') as token:
+        if os.path.exists('/Users/vladimirivliev/PycharmProjects/pythonProject1/credentials/token.pickle'):
+            with open('/Users/vladimirivliev/PycharmProjects/pythonProject1/credentials/token.pickle', 'rb') as token:
                 creds = pickle.load(token)
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
@@ -40,9 +40,10 @@ class GoogleSheet:
                 flow = InstalledAppFlow.from_client_secrets_file(
                     'credentials/credentials.json', self.SCOPES)
                 creds = flow.run_local_server(port=0)
-            with open('credentials/token.pickle', 'wb') as token:
+            with open('/Users/vladimirivliev/PycharmProjects/pythonProject1/credentials/token.pickle', 'wb') as token:
                 pickle.dump(creds, token)
         self.order_plan_sheet_id = new_id
+        self.collecting = '1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU'
         self.SPREADSHEET_ID = SPREADSHEET_ID
         self.credentials = creds
         self.service = build('sheets', 'v4', credentials=creds)
@@ -68,7 +69,6 @@ class GoogleSheet:
         destination_sheet.append_rows(data)
 
         print('Данные успешно перенесены.')
-
 
     def updateOrders(self, range, values):
         data = [{
@@ -102,6 +102,34 @@ class GoogleSheet:
 
         # The ID of the spreadsheet to update.
         spreadsheet_id = self.SPREADSHEET_ID  # TODO: Update placeholder value.
+
+        # The A1 notation of a range to search for a logical table of data.
+        # Values will be appended after the last row of the table.
+        range_ = range # TODO: Update placeholder value.
+
+        # How the input data should be interpreted.
+        value_input_option = 'USER_ENTERED'  # TODO: Update placeholder value.
+
+        # How the input data should be inserted.
+        insert_data_option = 'INSERT_ROWS'  # TODO: Update placeholder value.
+
+        value_range_body = value_range_body
+
+        request = service.spreadsheets().values().append(spreadsheetId=spreadsheet_id, range=range,
+                                                         valueInputOption=value_input_option,
+                                                         insertDataOption=insert_data_option, body={'values': value_range_body})
+        response = request.execute()
+
+        # TODO: Change code below to process the `response` dict:
+        pprint(response)
+
+    def append_data_FoxWeld(self, range: str = None, value_range_body: list = None):
+
+        credentials = self.credentials
+        service = discovery.build('sheets', 'v4', credentials=credentials)
+
+        # The ID of the spreadsheet to update.
+        spreadsheet_id = '1kEguI4qVix6bQnF2VGsoO9Pk5oBcqZOY5jTlCefsaCo'  # TODO: Update placeholder value.
 
         # The A1 notation of a range to search for a logical table of data.
         # Values will be appended after the last row of the table.
@@ -189,20 +217,19 @@ class GoogleSheet:
         print(sales_plan)
         return sales_plan
 
-    def get_sales_plan(self):
+    def get_collecting_in_sheet(self):
         credentials = self.credentials
         service = discovery.build('sheets', 'v4', credentials=credentials)
-        spreadsheet_id = self.order_plan_sheet_id
+        spreadsheet_id = self.collecting
         sh = service.spreadsheets()
-        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Прогноз продаж!C1:Z1500').execute()
-        sales_plan = {
-            "Product": {}
+        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Парсер справочник товаров!D1:H1500').execute()
+        product_id = [item[0] for item in responce['values']]
+        seller_id = [item[4] for item in responce['values'] if len(item) == 5]
+        result = {
+            'product_id': product_id[1:],
+            'seller_id': seller_id[1:]
         }
-        for i in range(1, len(responce["values"])):
-            product_code = int(responce['values'][i][0])
-            sales = {date: int(sale) for date, sale in zip(responce['values'][0][1:], responce['values'][i][1:])}
-            sales_plan["Product"][product_code] = {"Month": sales}
-        return sales_plan
+        return result
 
     def get_current_stock(self):
         credentials = self.credentials
@@ -250,10 +277,10 @@ class GoogleSheet:
         if sheet_name:
             sheet_metadata = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute().get('sheets', '')
             for sheet in sheet_metadata:
-                print(sheet['properties']['title'])
+                # print(sheet['properties']['title'])
                 if sheet['properties']['title'] == sheet_name:
                     sheet_id = sheet['properties']['sheetId']
-                    print(sheet_id)
+                    # print(sheet_id)
                     break
         body = {
             "requests": [
@@ -391,7 +418,7 @@ class GoogleSheet:
 
 def main():
     gs = GoogleSheet()
-    gs.get_current_orders()
+    gs.get_sales_plan()
 
 
 if __name__ == '__main__':

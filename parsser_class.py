@@ -10,6 +10,7 @@ import random
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
+from pprint import pprint
 
 
 class ParserOzon(object):
@@ -165,12 +166,15 @@ class ParserOzon(object):
             try:
                 result = json.loads(driver.page_source.strip('<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">'))
                 saler_id_class = list(filter(lambda x: 'webCurrentSeller' in x, result['widgetStates']))
+                # pprint(result)
                 saler = json.loads(result['widgetStates'][saler_id_class])
             except:
                 pass
             try:
                 key_params = list(filter(lambda x: 'webCharacteristics' in x, result['widgetStates']))[0]
                 product_info = json.loads(result['widgetStates'][key_params])["characteristics"][0]['short']
+                print(product_info)
+
                 name = str(json.loads(result['widgetStates'][key_params])["productTitle"]).strip('Характеристики: ')
                 sales_id = saler['id']
                 sales_name = saler['name']

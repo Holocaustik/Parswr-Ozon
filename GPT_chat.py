@@ -1,7 +1,7 @@
 import openai
 
 # Установите ваш API-ключ OpenAI
-openai.api_key = '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'
+openai.api_key = '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'
 
 
 def communicate_with_gpt(prompt):
