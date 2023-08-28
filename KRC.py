@@ -507,14 +507,16 @@ class ParserKRC():
     def main(self):
         GoogleSheet().delete_all()
         driver = Driver_Chrom().loadChromTest()
+        brand = ['hammer-flex', 'hammer', 'hammerflex', 'HAMMER', 'tesla', 'wester', 'zubr']
+        company = 'ОПТ-ТРЕЙД'
+        ParserOzon(brand=brand, company=company).parser_main()
         # self.parser_ozon_Foxweld(driver)
         # self.parser_vi_Foxweld(driver)
         # self.parser_ozon_test(driver)
-        ParserOzon().parser_main()
         ParserWB().parser_main()
         ParserVI().parser_main()
         ParserCitilink().parser_main()
-        self.parser_citilink(driver)
+        # self.parser_citilink(driver)
         self.parserMvideo(driver)
         self.parser_sber(driver)
         self.parser_eldorado(driver)
