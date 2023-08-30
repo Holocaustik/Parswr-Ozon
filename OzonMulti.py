@@ -21,7 +21,9 @@ class ParserOzon(object):
 
     def __init__(self, brand: list = [], company: str = None):
         self.SPREADSHEET_ID = '1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU'
+        self.SPREADSHEET_ID_NEW = '1Z1vbksKPw7xx07whBa3tHj6H7uoT7uQbx8WReSHCHC0'
         self.result = multiprocessing.Manager().list()
+        self.result_new = multiprocessing.Manager().list()
         self.result_collecting_products = multiprocessing.Manager().list()
         self.list_items = multiprocessing.Manager().list()
         self.unic_seller = multiprocessing.Manager().list()
@@ -70,6 +72,7 @@ class ParserOzon(object):
                  'name_small': find_name(item[0][0]),
                  'price': item[1][0].strip(' ₽').strip(' ').replace('\u2009', ''),
                  'brand': brand['brand'],
+                'company': self.company,
                  'code': item[2][0]}
             self.list_items.append(data)
             if item[2][0] not in self.saved_code['product_id']:
@@ -108,6 +111,7 @@ class ParserOzon(object):
         if price is not None: price = price
         else: price = item_info['price']
         self.result.append(('OZON', seller, item_info['name_small'], price, datetime.date.today().strftime('%d.%m.%Y')))
+        self.result_new.append((item_info['company'], item_info['code'], price, datetime.date.today().strftime('%d.%m.%Y')))
         driver.close()
         driver.quit()
 
@@ -282,15 +286,20 @@ class ParserOzon(object):
         # заходим в каждую карточку товара из списка уникальных ссылок и собираем данные. Сразу запускается по max_workers окон
         self.get_multy_funk(tasks=self.unic_list, function=self.parser_item, max_workers=10,
                             range=urls['google_sheets_name']['main_parser'], what_need_save=self.result)
+        GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(self.result_new), range=urls['google_sheets_name']['main_parser_new'])
 
         if len(self.unic_code) > 0:
             self.get_multy_funk(tasks=self.unic_code, function=self.collecting_products, max_workers=10,
                                 range=urls['google_sheets_name']['collecting_products'],
                                 what_need_save=self.result_collecting_products)
+            GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(self.result_collecting_products),
+                                                             range=urls['google_sheets_name']['collecting_products'])
 
         if len(self.unic_seller) > 0:
             self.get_multy_funk(tasks=self.unic_seller, function=self.collecting_sellers, max_workers=10,
                                 range=urls['google_sheets_name']['collecting_sellers'], what_need_save=self.list_seller)
+            GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(self.list_seller),
+                                                             range=urls['google_sheets_name']['collecting_sellers'])
 
 
 if __name__ == "__main__":

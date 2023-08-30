@@ -16,8 +16,9 @@ from other import remove_duplicates
 
 class ParserWB(object):
 
-    def __init__(self):
+    def __init__(self, brand: list = [], company: str = None):
         self.SPREADSHEET_ID = '1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU'
+        self.SPREADSHEET_ID_NEW = '1Z1vbksKPw7xx07whBa3tHj6H7uoT7uQbx8WReSHCHC0'
         self.result = multiprocessing.Manager().list()
         self.result_collecting_products = multiprocessing.Manager().list()
         self.list_items = multiprocessing.Manager().list()
@@ -25,6 +26,10 @@ class ParserWB(object):
         self.list_seller = multiprocessing.Manager().list()
         self.unic_seller = multiprocessing.Manager().list()
         self.unic_code = multiprocessing.Manager().list()
+        self.result_new = multiprocessing.Manager().list()
+        self.company = company
+        self.brand = brand
+
 
     def parser_page(self, *args, **kwargs):
         page, brand = args[0]
@@ -45,6 +50,7 @@ class ParserWB(object):
                 'name_small': find_name(item['name']),
                 'full_name': item['name'],
                 'price': int(item['salePriceU']) / 100,
+                'company': self.company,
                 'seller_id': item['supplierId'],
                 'code': item["id"]}
             self.unic_code.append(('ОПТ-ТРЕЙД', brand, 'WB', data_main['code'], data_main['full_name'], data_main['name_small'], data_main['link'], data_main['seller_id']))
@@ -104,6 +110,8 @@ class ParserWB(object):
         wait.until(EC.presence_of_element_located((By.XPATH, urls['WB']['xpath']['seller'])))
         seller = driver.find_element(By.XPATH, urls['WB']['xpath']['seller']).text
         self.result.append(('WB', seller, item_info['name_small'], item_info['price'], datetime.date.today().strftime('%d.%m.%Y')))
+        self.result_new.append((item_info['company'], item_info['code'], item_info['price'], datetime.date.today().strftime('%d.%m.%Y')))
+
         driver.close()
         driver.quit()
 
@@ -143,18 +151,25 @@ class ParserWB(object):
         saved_code_multy_seller = saved_code['seller_id']
 
         tasks = [(page, url) for url in urls['WB']['brands']['STM'] for page in range(1, 30)]
+
         self.multy_get_funk(function=self.parser_page, tasks=tasks, max_workers=self.max_threads)
 
         unic_list = remove_duplicates(input_list=self.list_items, key='code')
         self.multy_get_funk(function=self.parser_item, tasks=unic_list, max_workers=self.max_threads, what_need_save=self.result, range_value=urls['google_sheets_name']['main_parser'])
+        GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(self.result_new),
+                                                         range=urls['google_sheets_name']['main_parser_new'])
 
         filter_unic_seller = self.get_unic_seller_id(saved_id=saved_code_multy_seller, need_to_add=self.unic_seller)
         if len(filter_unic_seller) > 0:
             self.multy_get_funk(function=self.collecting_sellers, tasks=filter_unic_seller, max_workers=self.max_threads, what_need_save=self.list_seller, range_value=urls['google_sheets_name']['collecting_sellers'])
+            GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(self.list_seller),
+                                                             range=urls['google_sheets_name']['collecting_sellers'])
 
         filter_unic_product = self.get_unic_product_id(saved_id=saved_code_multy_product, need_to_add=self.unic_code)
         if len(filter_unic_product) > 0:
             self.get_save_result_too_google_sheets(filter_unic_product, range=urls['google_sheets_name']['collecting_products'])
+            GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(filter_unic_product),
+                                                             range=urls['google_sheets_name']['collecting_products'])
 
 
 if __name__ == "__main__":

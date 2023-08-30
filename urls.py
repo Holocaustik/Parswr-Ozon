@@ -3,7 +3,9 @@ urls = {
     'google_sheets_name': {
         'collecting_products': 'Парсер справочник товаров!A1:H1',
         'collecting_sellers': 'Парсер справочник продавцов!A1:H1',
-        'main_parser': "парсер OZON WB!A1:E1"
+        'main_parser': "парсер OZON WB!A1:E1",
+        "main_parser_new": "Результат парсера!A1:D1"
+
     },
     'Ozon': {
         'url': {
@@ -24,7 +26,7 @@ urls = {
                 'seller_name': 'seller.name || name',
                 'seller_id': 'seller.link || id',
                 'credentials': 'credentials',
-                'price': 'price || cardPrice || originalPrice'},
+                'price': 'cardPrice || price || originalPrice'},
             'LEX ': 'items[*].[mainState[*].atom.textAtom.text, mainState[*].atom.priceWithTitle.price, action.link]',
             'Foxweld': 'items[*].[mainState[*].atom.textAtom.text, mainState[*].atom.priceWithTitle.price || mainState[*].atom.priceV2.price[0].text, action.link]'
         },
