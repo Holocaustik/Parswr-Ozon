@@ -115,7 +115,6 @@ class ParserWB(object):
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             list(tqdm(executor.map(function, tasks), total=len(tasks), desc="Processing", ncols=100))
         if range_value is not None:
-            print(what_need_save)
             self.get_save_result_too_google_sheets(what_need_save, range=range_value)
 
     def get_unic_seller_id(self, saved_id: list = [], need_to_add: list = []) -> list:

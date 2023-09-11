@@ -8,10 +8,9 @@ import jmespath
 from selenium.webdriver.common.by import By
 from browser import Driver_Chrom
 from push_to_google_sheets import GoogleSheet
-from requests_html import HTMLSession
 from html import unescape
 # from Parsers.Ozon import ParserKRC_Ozon
-from OzonMulti import ParserOzon
+from Parsers.OzonMulti import ParserOzon
 from Parsers.WBMulti import ParserWB
 from Parsers.VI import ParserVI
 from Parsers.Citilink import ParserCitilink
@@ -44,7 +43,9 @@ class ParserKRC():
         self.offers = '//div[contains(@class, "offer_with-payment-method")]'
         self.name_xpath = './/h1[contains(@itemprop, "name")]'
         self.seller_xpath = './/div[contains(@class, "merchant-name")]'
-        self.price_xpath = './/span[contains(@class, "price-final")]'
+        self.seller_info_xpath = './/div[contains(@class, "pdp-merchant")]'
+        # self.price_xpath = './/span[contains(@class, "price-final")]'
+        self.price_xpath = './/span[contains(@class, "product-offer-price")]'
         self.next_page = '//li[@class="next"]'
         self.url_sber = 'https://sbermegamarket.ru/catalog/?q=hammer&collectionId=14576'
 
@@ -91,59 +92,15 @@ class ParserKRC():
     def find_name(self, full_name: str = '') -> str:
         test_name = re.search("[A-Z]+[0-9/]+[/A-ZА-Я0-9]+", full_name.replace('&amp;#x2F;', '/').replace('&#x2F;', ''))
         test_name_1 = re.search("[A-ZА-Я]+[0-9/]+", full_name.replace('&#x2F;', ''))
-        test_name_2 = re.search("[A-ZА-Я]+[0-9/]+[/A-ZА-Я0-9]+", full_name.replace('Hammer', '').replace('HAMMER', '').replace('Flex', '').replace('flex', '').replace('&amp;#x2F;', '/').replace('&#x2F;', ''))
+        test_name_2 = re.search("[A-ZА-Я]+[0-9/]+[/A-ZА-Я0-9]+",
+                                full_name.replace('Hammer', '').replace('HAMMER', '').replace('Flex', '').replace(
+                                    'flex', '').replace('&amp;#x2F;', '/').replace('&#x2F;', ''))
         test_name_3 = re.search(r"[A-ZА-Я/]+ *\d+", full_name.replace('&amp;#x2F;', '/'))
         test_name_4 = re.search(r'([A-Z]+\s[A-Z0-9\-]+\s[A-Z]+)', full_name.replace('&amp;#x2F;', '/'))
-        name = test_name.group(0) if test_name else test_name_1.group(0) if test_name_1 else test_name_2.group(0) if test_name_2 else test_name_3.group(0) if test_name_3 else test_name_4.group(0) if test_name_4 else full_name
+        name = test_name.group(0) if test_name else test_name_1.group(0) if test_name_1 else test_name_2.group(
+            0) if test_name_2 else test_name_3.group(0) if test_name_3 else test_name_4.group(
+            0) if test_name_4 else full_name
         return name.replace('TESLA ', '')
-
-    # def parser_ozon(self, driver=None):
-    #     driver = driver if driver else Driver_Chrom().loadChrome(headless=True)
-    #     result = []
-    #     unic_code = set()
-    #     flag = True
-    #     for page in range(1, 140):
-    #         print(f'Page {page}')
-    #         driver.get(f'{self.url_ozon}?page={page}')
-    #         if flag:
-    #             try:
-    #                 driver.get(f'{self.url_ozon}?page={page}')
-    #                 print(f'{self.url_ozon}?page={page}')
-    #
-    #                 time.sleep(5)
-    #                 all_json = json.loads(driver.page_source.strip(self.clean_json_ozon))
-    #                 check = [x for x, y in all_json['catalog']['searchResultsV2'].items()]
-    #                 res = jmespath.search(self.jmespath_ozon, all_json['catalog']['searchResultsV2'][check[0]])
-    #                 for item in res:
-    #                     try:
-    #                         item_code = item[2][0]
-    #                         if item_code not in unic_code:
-    #                             name = self.find_name(item[0][0])
-    #                             price = item[1][0].strip(' ₽').strip(' ').replace('\u2009', '')
-    #                             link = f'https://www.ozon.ru/product/{item_code}'
-    #                             driver.get(link)
-    #                             time.sleep(2)
-    #                             find_seller = driver.find_elements(By.XPATH, "//a[contains(@href, 'https://www.ozon.ru/seller/')]")
-    #                             try:
-    #                                 price = driver.find_element(By.XPATH, "//span[contains(text(), 'без Ozon Карты')]//preceding::span[2]").text.strip(' ₽').strip(' ').replace('\u2009', '')
-    #                                 print(name, price)
-    #                             except:
-    #                                 pass
-    #                             seller = find_seller[-1].text if len(find_seller) > 1 else find_seller[0].text
-    #                             result.append(('OZON', seller, name, price, datetime.date.today().strftime('%d.%m.%Y')))
-    #                             unic_code.add(item_code)
-    #                         else:
-    #                             print('Дубликат')
-    #                     except:
-    #                         print('Тут ошибка')
-    #             except:
-    #                 print('сработал флаг')
-    #                 flag = True
-    #         else:
-    #             break
-    #     gs = GoogleSheet(self.SPREADSHEET_ID)
-    #     gs.append_data(value_range_body=result, range="парсер OZON WB!A1:E1")
-    #     return result
 
     def parser_ozon_test(self, driver=None):
         driver = driver if driver else Driver_Chrom().loadChrome(headless=True)
@@ -171,7 +128,8 @@ class ParserKRC():
                                     link = f'https://www.ozon.ru/product/{item_code}'
                                     driver.get(link)
                                     time.sleep(2)
-                                    find_seller = driver.find_elements(By.XPATH, "//a[contains(@href, 'https://www.ozon.ru/seller/')]")
+                                    find_seller = driver.find_elements(By.XPATH,
+                                                                       "//a[contains(@href, 'https://www.ozon.ru/seller/')]")
                                     try:
                                         price = driver.find_element(By.XPATH,
                                                                     "//span[contains(text(), 'без Ozon Карты')]//preceding::span[2]").text.strip(
@@ -180,7 +138,8 @@ class ParserKRC():
                                     except:
                                         pass
                                     seller = find_seller[-1].text if len(find_seller) > 1 else find_seller[0].text
-                                    result.append(('OZON', seller, name, price, datetime.date.today().strftime('%d.%m.%Y')))
+                                    result.append(
+                                        ('OZON', seller, name, price, datetime.date.today().strftime('%d.%m.%Y')))
                                     unic_code.add(item_code)
                                 else:
                                     print('Дубликат')
@@ -214,7 +173,8 @@ class ParserKRC():
                                 link = f'https://www.wildberries.ru/catalog/{item["id"]}/detail.aspx'
                                 driver.get(link)
                                 time.sleep(1)
-                                seller = driver.find_element(By.XPATH,"//a[contains(@class, 'seller-info__name seller-info__name--link')]").text
+                                seller = driver.find_element(By.XPATH,
+                                                             "//a[contains(@class, 'seller-info__name seller-info__name--link')]").text
                                 result.append(('WB', seller, name, price, datetime.date.today().strftime('%d.%m.%Y')))
                             except:
                                 pass
@@ -255,20 +215,21 @@ class ParserKRC():
                 time.sleep(1)
                 ofers_check = driver.find_elements(By.XPATH, self.offers)
                 for offer in ofers_check:
-                    try:
-                        name = self.find_name(driver.find_element(By.XPATH, self.name_xpath).text)
-                        seller = offer.find_element(By.XPATH, self.seller_xpath).text
-                        price = offer.find_element(By.XPATH, self.price_xpath).text
-                        print(seller, name, price)
-                        if f'{seller}{name}' not in unik_name:
-                            result.append(('SBER', seller, name, price, datetime.date.today().strftime('%d.%m.%Y')))
-                            unik_name.add(f'{seller}{name}')
-                    except:
-                        print('Error')
-                        pass
+                    time.sleep(1)
+
+                    print(href)
+                    name = self.find_name(driver.find_element(By.XPATH, self.name_xpath).text)
+                    print(name)
+                    seller = offer.find_element(By.XPATH, self.seller_xpath).text
+                    price = offer.find_element(By.XPATH, self.price_xpath).text
+                    print(seller, name, price)
+                    if f'{seller}{name}' not in unik_name:
+                        result.append(('SBER', seller, name, price, datetime.date.today().strftime('%d.%m.%Y')))
+                        unik_name.add(f'{seller}{name}')
             except:
-                print('Error 2')
                 pass
+
+
         gs = GoogleSheet(self.SPREADSHEET_ID)
         gs.append_data(value_range_body=result, range="парсер OZON WB!A1:E1")
 
@@ -294,7 +255,8 @@ class ParserKRC():
                 except:
                     full_name = card.find_element(By.XPATH, self.xpath_for_name_VI).get_attribute('title')
                     name = self.find_name(full_name)
-                    price = card.find_element(By.XPATH, self.xpath_for_price_VI).text.replace(' р.', '').replace(' ', '')
+                    price = card.find_element(By.XPATH, self.xpath_for_price_VI).text.replace(' р.', '').replace(' ',
+                                                                                                                 '')
                     result.append(('VI', 'Vseinstrumenti', name, price, datetime.date.today().strftime('%d. %m. %Y')))
         gs = GoogleSheet(self.SPREADSHEET_ID)
         gs.append_data(value_range_body=result, range="парсер OZON WB!A1:E1")
@@ -326,9 +288,13 @@ class ParserKRC():
                 driver.get(f'{self.mvideo_url}&page={page}')
                 time.sleep(2)
                 try:
-                    names = list(map(lambda x: self.find_name(x.text), driver.find_elements(By.XPATH, self.mvideo_cards_xpath)))
-                    prices = list(map(lambda x: x.text.replace(' ₽', '').replace(' ', ''), driver.find_elements(By.XPATH, self.mvideo_cards_xpath_price)))
-                    result.extend(list(zip(['Mvideo' for _ in range(len(names))], ['Mvideo' for _ in range(len(names))], names, prices, [datetime.date.today().strftime('%d. %m. %Y') for _ in range(len(names))])))
+                    names = list(
+                        map(lambda x: self.find_name(x.text), driver.find_elements(By.XPATH, self.mvideo_cards_xpath)))
+                    prices = list(map(lambda x: x.text.replace(' ₽', '').replace(' ', ''),
+                                      driver.find_elements(By.XPATH, self.mvideo_cards_xpath_price)))
+                    result.extend(list(
+                        zip(['Mvideo' for _ in range(len(names))], ['Mvideo' for _ in range(len(names))], names, prices,
+                            [datetime.date.today().strftime('%d. %m. %Y') for _ in range(len(names))])))
                 except:
                     flag = False
             else:
@@ -349,7 +315,8 @@ class ParserKRC():
                     name = self.find_name(card.find_element(By.XPATH, self.name_xpath_eldarado).text)
                     price = card.find_element(By.XPATH, self.price_xpath_eldarado).text
                     if name not in unic_name:
-                        result.append(('Eldarado', 'Eldarado', name, price, datetime.date.today().strftime('%d. %m. %Y')))
+                        result.append(
+                            ('Eldarado', 'Eldarado', name, price, datetime.date.today().strftime('%d. %m. %Y')))
                         unic_name.add(name)
                         print(name, price)
                     else:
@@ -366,7 +333,11 @@ class ParserKRC():
             driver.get(f'{self.url_holodilnik}?page={page}')
             time.sleep(2)
             all_cards = driver.find_elements(By.XPATH, self.cards_xpath_holodilnik)
-            [result.append(('Holodilnik', 'Holodilnik', self.find_name(i.find_element(By.XPATH, self.name_xpath_holodilnik).text), i.find_element(By.XPATH, self.price_xpath_holodilnik).get_attribute('content').replace(' ₽', ''), datetime.date.today().strftime('%d. %m. %Y'))) for i in all_cards]
+            [result.append(('Holodilnik', 'Holodilnik',
+                            self.find_name(i.find_element(By.XPATH, self.name_xpath_holodilnik).text),
+                            i.find_element(By.XPATH, self.price_xpath_holodilnik).get_attribute('content').replace(' ₽',
+                                                                                                                   ''),
+                            datetime.date.today().strftime('%d. %m. %Y'))) for i in all_cards]
         gs = GoogleSheet(self.SPREADSHEET_ID)
         gs.append_data(value_range_body=result, range="парсер OZON WB!A1:E1")
 
@@ -393,7 +364,8 @@ class ParserKRC():
                                 link = f'https://www.ozon.ru{item[2]}'
                                 driver.get(link)
                                 time.sleep(2)
-                                find_seller = driver.find_elements(By.XPATH, "//a[contains(@href, 'https://www.ozon.ru/seller/')]")
+                                find_seller = driver.find_elements(By.XPATH,
+                                                                   "//a[contains(@href, 'https://www.ozon.ru/seller/')]")
                                 seller = find_seller[-1].text if len(find_seller) > 1 else find_seller[0].text
                                 if 'LEXHH6040BL' in name.upper():
                                     print('Тут')
@@ -456,9 +428,11 @@ class ParserKRC():
                     full_name = card.find_element(By.XPATH, self.xpath_for_name_VI).get_attribute('title')
                     name = self.find_name(full_name)
                     card_url = card.find_element(By.XPATH, './/a[@href]').get_attribute('href')
-                    price = card.find_element(By.XPATH, self.xpath_for_price_VI).text.replace(' р.', '').replace(' ', '')
+                    price = card.find_element(By.XPATH, self.xpath_for_price_VI).text.replace(' р.', '').replace(' ',
+                                                                                                                 '')
                     print(('VI', 'Vseinstrumenti', name, price, card_url, datetime.date.today().strftime('%d. %m. %Y')))
-                    result.append(('VI', 'Vseinstrumenti', name, price, '', '',  card_url, datetime.date.today().strftime('%d. %m. %Y')))
+                    result.append(('VI', 'Vseinstrumenti', name, price, '', '', card_url,
+                                   datetime.date.today().strftime('%d. %m. %Y')))
         gs = GoogleSheet(self.SPREADSHEET_ID)
         gs.append_data_FoxWeld(value_range_body=result, range="Parser resalt!A2:F2")
 
@@ -485,14 +459,18 @@ class ParserKRC():
                                 link = f'https://www.ozon.ru{item[2]}'
                                 driver.get(link)
                                 time.sleep(2)
-                                find_seller = driver.find_elements(By.XPATH, "//a[contains(@href, 'https://www.ozon.ru/seller/')]")
+                                find_seller = driver.find_elements(By.XPATH,
+                                                                   "//a[contains(@href, 'https://www.ozon.ru/seller/')]")
                                 try:
-                                    price = driver.find_element(By.XPATH, "//span[contains(text(), 'без Ozon Карты')]//preceding::span[2]").text.strip(' ₽').strip(' ').replace('\u2009', '')
+                                    price = driver.find_element(By.XPATH,
+                                                                "//span[contains(text(), 'без Ozon Карты')]//preceding::span[2]").text.strip(
+                                        ' ₽').strip(' ').replace('\u2009', '')
                                 except:
                                     pass
                                 seller = find_seller[-1].text if len(find_seller) > 1 else find_seller[0].text
                                 print(seller, name, price)
-                                result.append(('OZON', seller, name, price, '', '',  link, datetime.date.today().strftime('%d.%m.%Y')))
+                                result.append(('OZON', seller, name, price, '', '', link,
+                                               datetime.date.today().strftime('%d.%m.%Y')))
                                 unic_code.add(item_code)
                         except:
                             pass
@@ -506,22 +484,28 @@ class ParserKRC():
 
     def main(self):
         GoogleSheet().delete_all()
-        driver = Driver_Chrom().loadChromTest()
-        brand = ['hammer-flex', 'hammer', 'hammerflex', 'HAMMER', 'tesla', 'wester', 'zubr']
+        driver = Driver_Chrom().loadChromTest(headless=True)
+        brand = ['hammer', 'tesla', 'wester']
         company = 'ОПТ-ТРЕЙД'
         ParserOzon(brand=brand, company=company).parser_main()
-        # self.parser_ozon_Foxweld(driver)
-        # self.parser_vi_Foxweld(driver)
-        # self.parser_ozon_test(driver)
-        ParserWB().parser_main()
-        ParserVI().parser_main()
-        ParserCitilink().parser_main()
-        # self.parser_citilink(driver)
+        print("ParserOzon")
+        time.sleep(10)
+        ParserWB(brand=brand, company=company).parser_main()
+        print('ParserWB')
+        brand = ['hammer', 'tesla']
+        ParserVI(brand=brand, company=company).parser_main()
+        print('ParserVI')
+        ParserCitilink(brand=brand, company=company).parser_main()
         self.parserMvideo(driver)
+        print('parserMvideo')
         self.parser_sber(driver)
+        print('parser_sber')
         self.parser_eldorado(driver)
+        print('parser_eldorado')
         self.parser_maxidom(driver)
+        print('parser_maxidom')
         self.parser_holodilnik(driver)
+        print('parser_holodilnik')
         driver.close()
         driver.quit()
         GoogleSheet().parse_and_append_data()

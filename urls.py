@@ -10,10 +10,10 @@ urls = {
     'Ozon': {
         'url': {
             'brand': {
-                'hammer-flex' : 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/hammer-flex-100248083/?currency_price=1000.000%3B86670.000',
+                'hammer-flex': 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/hammer-flex-100248083/?currency_price=1000.000%3B86670.000',
                 'hammer': 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/hammer-26303172/?currency_price=1000.000%3B86670.000',
-                'hammerflex': 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/hammerflex-100283180/?currency_price=1000.000%3B86670.000',
-                'HAMMER': 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/hammer-87265380/category/instrumenty-dlya-remonta-i-stroitelstva-9856/?currency_price=1000.000%3B86670.000',
+                # 'hammerflex': 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/hammerflex-100283180/?currency_price=1000.000%3B86670.000',
+                # 'HAMMER': 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/hammer-87265380/category/instrumenty-dlya-remonta-i-stroitelstva-9856/?currency_price=1000.000%3B86670.000',
                 'tesla': 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/tesla-100085446/category/stroitelstvo-i-remont-9700/?currency_price=1000.000%3B86670.000',
                 'wester': 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/wester-27762156/category/stroitelstvo-i-remont-9700/?currency_price=1000.000%3B86670.000',
                 'zubr': 'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=https://www.ozon.ru/brand/zubr-26303502/category/instrumenty-dlya-remonta-i-stroitelstva-9856/',
@@ -44,14 +44,11 @@ urls = {
         }
     },
     'WB': {
-        'brands': {
-            'STM': [{'brand': 'hammer',
-                     'url': 22609},
-                    {'brand': 'wester',
-                     'url': 17920}
-                    ],
+        'brand': {
+            'hammer': 22609,
+            'wester': 17920
             # 17919 Tesla, убрап так как там много говна и нет нашего товара
-        },
+            },
         'xpath': {
             'seller': "//a[contains(@class, 'seller-info__name seller-info__name--link')]",
             'price': "//span[contains(text(), 'без Ozon Карты')]//preceding::span[2]"
@@ -66,19 +63,36 @@ urls = {
                 'https://megamarket.ru/catalog/?q=wester&collectionId=12007'],
         },
         'xpath': {
-            'seller_xpath': './/span[contains(@class, "pdp-merchant-rating-block__merchant-name")]',
-            'price_xpath': './/div[contains(@class, "item-price")]',
-            'card_link_xpath': './/div[contains(@class, "catalog-item-desktop")]',
-            # 'card_offers': '//a[contains(@class, "more-offers-button")]',
+            'seller_xpath': './/div[contains(@class, "product-offer-name")]/div[1]',
+            'seller_xpath_main': '//span[contains(@class, "pdp-merchant-rating-block__merchant-name")]',
+            'price_xpath': './/span[contains(@class, "product-offer-price__amount")]',
+            'price_xpath_main': '//span[contains(@class, "pdp-sales-block__price-final")]',
+            # 'card_link_xpath': './/div[contains(@class, "catalog-item-desktop")]',
+            'card_link_xpath': './/div[contains(@class, "catalog-item-desktop")]//div[@class="item-title"]/a',
+            'card_offers': '//a[contains(@class, "more-offers-button")]',
             'offers': '//div[contains(@class, "product-offer_with-payment-method")]',
-            'name_xpath': './/div[contains(@class, "item-title")]',
+            'link': '//div[@class="item-title"]/a',
+            # 'name_xpath': './/div[contains(@class, "item-title")]',
+            'name_xpath': '//h1[@itemprop = "name"]',
             'next_page': '//li[@class="next"]',
         }
     },
     'VI': {
         'url': {
-            'STM': [
-                'https://spb.vseinstrumenti.ru/brand/hammer---2088444/'],
+            'brand': {
+                'hammer': 'https://spb.vseinstrumenti.ru/brand/hammer---2088444/',
+                'tesla': 'https://spb.vseinstrumenti.ru/brand/tesla--2071870/',
+                'vihr': 'https://spb.vseinstrumenti.ru/brand/vihr-1007/',
+                'zubr': 'https://spb.vseinstrumenti.ru/brand/zubr-665/',
+                'interskol': 'https://spb.vseinstrumenti.ru/brand/interskol-19/',
+                'champion': 'https://spb.vseinstrumenti.ru/brand/champion-602/',
+                'husqvarna': 'https://spb.vseinstrumenti.ru/brand/husqvarna-4/',
+                'patriot': 'https://spb.vseinstrumenti.ru/brand/patriot-426/',
+                'greenworks': 'https://spb.vseinstrumenti.ru/brand/greenworks-13753/',
+                'condtrol': 'https://spb.vseinstrumenti.ru/brand/condtrol-649/',
+                'ada': 'https://spb.vseinstrumenti.ru/brand/ada-890/',
+
+            },
         },
         'xpath': {
             'last_page': '//a[@class="number"]',
@@ -91,8 +105,7 @@ urls = {
     },
     'citilink': {
         'url': {
-            'STM': [
-                'https://www.citilink.ru/search/?text=hammer'],
+            'brand': {'hammer': 'https://www.citilink.ru/search/?text=hammer',}
         },
         'xpath': {
             'all_cards': '//div[@data-meta-product-id]',

@@ -222,8 +222,8 @@ class GoogleSheet:
         service = discovery.build('sheets', 'v4', credentials=credentials)
         spreadsheet_id = self.collecting
         sh = service.spreadsheets()
-        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Парсер справочник товаров!D1:H1500').execute()
-        product_id = [item[0] for item in responce['values']]
+        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Парсер справочник товаров!D1:H').execute()
+        product_id = [str(item[0]) for item in responce['values']]
         seller_id = [item[4] for item in responce['values'] if len(item) == 5]
         result = {
             'product_id': product_id[1:],
