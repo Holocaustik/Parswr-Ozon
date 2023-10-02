@@ -12,7 +12,7 @@ def parser_VI():
     result = []
     for brand in brand_list:
         url = f'https://spb.vseinstrumenti.ru/brand/{brand}/?asc=desc&orderby=price'
-        driver = Driver_Chrom().loadChrome(headless=True)
+        driver = Driver_Chrom().loadChromTest(headless=True)
         driver.get(url)
         time.sleep(2)
         last_page = min(int(driver.find_elements(By.XPATH, '//a[@class="number"]')[-1].text), 50)

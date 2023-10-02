@@ -33,12 +33,7 @@ def remove_duplicates(input_list: list = [], key: str = None) -> list:
     return output_list
 
 
-def get_multy_funk(tasks: list = None,
-                   function: object = None,
-                   max_workers: int = None,
-                   SPREADSHEET_ID: str = '',
-                   range: str = None,
-                   what_need_save: list = None) -> None:
+def get_multy_funk(tasks: list = None, function: object = None, max_workers: int = None, SPREADSHEET_ID: str = '', range: str = None, what_need_save: list = None) -> None:
     """
       Описание функции
         Эта функция запускает переданную ей функцию в кол-ве процессов, которые ей передали и записывает результат в таблицу:

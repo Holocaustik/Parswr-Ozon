@@ -94,16 +94,19 @@ class ParserWB(object):
         return [name, adress, ogrn, kpp]
 
     def parser_item(self, item_info: dict = None) -> None:
-        with Driver_Chrom().loadChromTest(headless=True) as driver:
-            driver.execute_script("window.open('about:blank', '_blank');")
-            window_handles = driver.window_handles
-            driver.switch_to.window(window_handles[1])
-            driver.get(item_info['link'])
-            wait = WebDriverWait(driver, 10)
-            wait.until(EC.presence_of_element_located((By.XPATH, urls['WB']['xpath']['seller'])))
-            seller = driver.find_element(By.XPATH, urls['WB']['xpath']['seller']).text
-            self.result.append(('WB', seller, item_info['name_small'], item_info['price'], datetime.date.today().strftime('%d.%m.%Y')))
-            self.result_new.append((item_info['company'], item_info['code'], item_info['price'], '', '', datetime.date.today().strftime('%d.%m.%Y')))
+        try:
+            with Driver_Chrom().loadChromTest(headless=True) as driver:
+                driver.execute_script("window.open('about:blank', '_blank');")
+                window_handles = driver.window_handles
+                driver.switch_to.window(window_handles[1])
+                driver.get(item_info['link'])
+                wait = WebDriverWait(driver, 10)
+                wait.until(EC.presence_of_element_located((By.XPATH, urls['WB']['xpath']['seller'])))
+                seller = driver.find_element(By.XPATH, urls['WB']['xpath']['seller']).text
+                self.result.append(('WB', seller, item_info['name_small'], item_info['price'], datetime.date.today().strftime('%d.%m.%Y')))
+                self.result_new.append((item_info['company'], item_info['code'], item_info['price'], '', '', datetime.date.today().strftime('%d.%m.%Y')))
+        except:
+            return
 
     def get_unic_seller_id(self, saved_id: list = [], need_to_add: list = []) -> list:
         unique_seller_id = set()

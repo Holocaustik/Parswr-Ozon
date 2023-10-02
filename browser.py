@@ -1,8 +1,12 @@
 import stealth as stealth
-import undetected_chromedriver
+import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium_stealth import stealth
 import time
+from pprint import pprint
+
+from urls import urls
+
 
 class Driver_Chrom():
 
@@ -12,7 +16,8 @@ class Driver_Chrom():
         self.asd = 'http://whatismyipaddress.com'
 
     def loadChrome(self, headless=True):
-        chrome_options = undetected_chromedriver.ChromeOptions()
+        uc.TARGET_VERSION = 117
+        chrome_options = uc.ChromeOptions()
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--disable-notifications")
@@ -22,17 +27,25 @@ class Driver_Chrom():
         chrome_options.add_argument('--disable-software-rasterizer')
 
 
-        browser = undetected_chromedriver.Chrome(headless=headless, options=chrome_options)
+        browser = uc.Chrome(headless=headless, options=chrome_options)
         return browser
 
     def loadChromTest(self, headless=True):
         chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--disable-dev-shm-usage')
+        chrome_options.add_argument("--window-size=1920x1080")
+        chrome_options.add_argument("--disable-notifications")
+        chrome_options.add_argument('--verbose')
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument('--disable-gpu')
+        chrome_options.add_argument('--disable-software-rasterizer')
+
         chrome_options.add_argument("start-maximized")
         if headless:
             chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option('useAutomationExtension', False)
+        chrome_options.add_experimental_option('useAutomationExtension', True)
         driver = webdriver.Chrome(options=chrome_options,
                                   executable_path=r"/Users/vladimirivliev/PycharmProjects/pythonProject1/chromdirectory/chromedriver")
 
@@ -66,4 +79,11 @@ class Driver_Chrom():
         # time.sleep(25)
         # driver.quit()
         return driver
+
+if __name__ == "__main__":
+    driver = Driver_Chrom().loadChrome()
+    driver.get("https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=%2Fproduct/1187643763")
+    time.sleep(2)
+    pprint(driver.page_source.strip(urls['clean_json']))
+
 

@@ -1,162 +1,56 @@
-from parsser_class import ParserOzon
-from db.db_connection import DB_my_connection
-import sqlite3 as sq
-from push_to_google_sheets import GoogleSheet
-import json
+import pychrome
+import time
+from pprint import pprint
 
-def main_parser():
-    SPREADSHEET_ID = '1mu-ONFyjL0Sam3TRLuVPwxr7qC90k9Pspmp34P60AV8'
-    new_id = '1jkuLyTbRLN98RFLo35qbGH0FwAFcR_qhESe9DPO05wk'
-    # Ссыли для парсера
-    urls = {
-        'УШМ': 'https://www.ozon.ru/category/uglovye-shlifmashiny-bolgarki-9879/',
-        'Шуруповерты': 'https://www.ozon.ru/category/shurupoverty-9858/',
-        'Электродрели': 'https://www.ozon.ru/category/elektrodreli-9860/',
-        'Перфораторы': 'https://www.ozon.ru/category/perforatory-9859/',
-        'Электролобзики': 'https://www.ozon.ru/category/elektrolobziki-9861/',
-        'Циркулярные_пилы': 'https://www.ozon.ru/category/diskovye-pily-10066/',
-        'Аккумуляторные_отвертки': 'https://www.ozon.ru/category/akkumulyatornye-otvertki-9902/',
-        # 'Газонокосилки_и_триммеры': 'https://www.ozon.ru/category/gazonokosilki-i-trimmery-14695/',
-        'Электро_и_бензопилы_цепные': 'https://www.ozon.ru/category/elektro-i-benzopily-tsepnye-10065/',
-        'Сварочное_оборудование': 'https://www.ozon.ru/category/svarochnye-apparaty-10047/',
-        'Штроборезы_и_бороздоделы': 'https://www.ozon.ru/category/shtroborezy-9891/',
-        'Клеевые_пистолеты_строительные': 'https://www.ozon.ru/category/kleevye-pistolety-stroitelnye-36082/',
-        'Электрорубанки': 'https://www.ozon.ru/category/elektrorubanki-9862/',
-        'Ленточные_шлифмашины': 'https://www.ozon.ru/category/lentochnye-shlifmashiny-9875/',
-        'Вибрационные_шлифмашины': 'https://www.ozon.ru/category/vibratsionnye-shlifmashiny-9876/',
-        'Полировальные_машины': 'https://www.ozon.ru/category/polirovalnye-mashiny-9878/',
-        'Эксцентриковые_шлифмашины': 'https://www.ozon.ru/category/ekstsentrikovye-shlifmashiny-9881/',
-        'Электроточила': 'https://www.ozon.ru/category/elektrotochila-9882/',
-        'Реноваторы_МФИ': 'https://www.ozon.ru/category/renovatory-34121/',
-        'Лазерные_уровни_нивелиры': 'https://www.ozon.ru/category/lazernye-urovni-niveliry-34693/',
-        # 'Отрезные_диски': 'https://www.ozon.ru/category/diski-otreznye-10116/',
-        # 'ingco': 'https://www.ozon.ru/category/instrumenty-dlya-remonta-i-stroitelstva-9856/
-        # ?category_was_predicted=true&from_global=true&text=ingco',
-        # 'Наборы': 'https://www.ozon.ru/category/nabory-instrumentov-31107/',
-        # 'Видеонаблюдение': 'https://www.ozon.ru/category/kamery-videonablyudeniya-15846/'
+from selenium import webdriver
 
-    }
+# Создание экземпляра Chrome WebDriver
+chrome_options = webdriver.ChromeOptions()
 
-    # Создаем экземпляр класса парсера
-    num = ParserOzon(pages=100, rasdels=urls)
+# Запустите Chrome в режиме без UI (без графического интерфейса)
+chrome_options.add_argument("--headless")
 
-    # Парсим ресурс
-    result = num.passer_from_url_without_params()
+# Запуск Chrome WebDriver
+driver = webdriver.Chrome(chrome_options=chrome_options, executable_path=r"/Users/vladimirivliev/PycharmProjects/pythonProject1/chromdirectory/chromedriver")
+driver.get("https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/hammer-26303172/?currency_price=1000.000%3B86670.000")
+pprint(driver.page_source)
+# Подключение к DevTools Protocol
+browser = pychrome.Browser(url=driver.command_executor._url)
+tab = browser.new_tab()
 
-    # Запись в базу данных
-    DB_my_connection().insert_in_db_codes_html(my_dict=result)
+# Активация DevTools Protocol
+tab.start()
 
-    # Запись на Гугл лист
-    with sq.connect('db/parser_ozon.db') as con:
-        cursor = con.cursor()
-        sql_query_date = f'SELECT card_code, review, price, rat, date  FROM codes_html'
-        last_date = cursor.execute(sql_query_date).fetchall()[-1][-1]
-        sql_query = f'SELECT card_code, review, price, rat, date  FROM codes_html WHERE date == "{last_date}"'
-        data = cursor.execute(sql_query).fetchall()
-        gs = GoogleSheet(SPREADSHEET_ID, new_id)
-        gs.append_data(value_range_body=data, range="Все цены!A1:E1")
+# Активация режима Pretty Print
+tab.Page.enable()
+tab.Runtime.enable()
 
-def push_tp_google_sheets():
-    SPREADSHEET_ID = '1mu-ONFyjL0Sam3TRLuVPwxr7qC90k9Pspmp34P60AV8'
-    new_id = '1jkuLyTbRLN98RFLo35qbGH0FwAFcR_qhESe9DPO05wk'
-    with sq.connect('db/parser_ozon.db') as con:
-        cursor = con.cursor()
-        sql_query_date = f'SELECT card_code, review, price, rat, date  FROM codes_html'
-        last_date = cursor.execute(sql_query_date).fetchall()[-1][-1]
-        sql_query = f'SELECT card_code, review, price, rat, date  FROM codes_html WHERE date == "{last_date}"'
-        data = cursor.execute(sql_query).fetchall()
-        gs = GoogleSheet(SPREADSHEET_ID, new_id)
-        gs.append_data(value_range_body=data, range="Все цены!A1:E1")
+# Перейдите на нужную страницу
+tab.Page.navigate(url="https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/hammer-26303172/?currency_price=1000.000%3B86670.000")
 
-def save_to_excel_with_params():
-    # Ссыли для парсера
-    urls = {
-        # 'УШМ': 'https://www.ozon.ru/category/uglovye-shlifmashiny-bolgarki-9879/',
-        # 'Шуруповерты': 'https://www.ozon.ru/category/shurupoverty-9858/',
-        # 'Электродрели': 'https://www.ozon.ru/category/elektrodreli-9860/',
-        # 'Перфораторы': 'https://www.ozon.ru/category/perforatory-9859/',
-        # 'Электролобзики': 'https://www.ozon.ru/category/elektrolobziki-9861/',
-        # 'Циркулярные_пилы': 'https://www.ozon.ru/category/diskovye-pily-10066/',
-        # 'Аккумуляторные_отвертки': 'https://www.ozon.ru/category/akkumulyatornye-otvertki-9902/',
-        # 'Газонокосилки_и_триммеры': 'https://www.ozon.ru/category/gazonokosilki-i-trimmery-14695/',
-        # 'Электро_и_бензопилы_цепные': 'https://www.ozon.ru/category/elektro-i-benzopily-tsepnye-10065/',
-        # 'Сварочное_оборудование': 'https://www.ozon.ru/category/svarochnye-apparaty-10047/',
-        # 'Штроборезы_и_бороздоделы': 'https://www.ozon.ru/category/shtroborezy-9891/',
-        # 'Клеевые_пистолеты_строительные': 'https://www.ozon.ru/category/kleevye-pistolety-stroitelnye-36082/',
-        # 'Электрорубанки': 'https://www.ozon.ru/category/elektrorubanki-9862/',
-        # 'Ленточные_шлифмашины': 'https://www.ozon.ru/category/lentochnye-shlifmashiny-9875/',
-        # 'Вибрационные_шлифмашины': 'https://www.ozon.ru/category/vibratsionnye-shlifmashiny-9876/',
-        # 'Полировальные_машины': 'https://www.ozon.ru/category/polirovalnye-mashiny-9878/',
-        # 'Эксцентриковые_шлифмашины': 'https://www.ozon.ru/category/ekstsentrikovye-shlifmashiny-9881/',
-        # 'Электроточила': 'https://www.ozon.ru/category/elektrotochila-9882/',
-        # 'Реноваторы_МФИ': 'https://www.ozon.ru/category/renovatory-34121/',
-        'Лазерные_уровни_нивелиры': 'https://www.ozon.ru/category/lazernye-urovni-niveliry-34693/',
-        # 'Отрезные_диски': 'https://www.ozon.ru/category/diski-otreznye-10116/',
-        # 'ingco': 'https://www.ozon.ru/category/instrumenty-dlya-remonta-i-stroitelstva-9856/
-        # ?category_was_predicted=true&from_global=true&text=ingco',
-        # 'Наборы': 'https://www.ozon.ru/category/nabory-instrumentov-31107/',
-        # 'Видеонаблюдение': 'https://www.ozon.ru/category/kamery-videonablyudeniya-15846/'
+# Дождитесь загрузки страницы (или выполните другие действия)
 
-    }
+# Активация Pretty Print (активация галочки автоформирования)
+script = """
+var config = {
+  "indent": 4,
+  "quote": "\"",
+  "keySeparator": ": "
+};
+Runtime.evaluate({
+  "expression": "JSON.stringify(JSON.parse(document.body.innerText), null, 4)",
+  "returnByValue": true,
+  "awaitPromise": true
+}).then(result => {
+  document.body.innerText = result.result.value;
+  console.log("Pretty Print enabled");
+});
+"""
+tab.Runtime.evaluate(expression=script)
 
-    for rasdel in urls:
-        with sq.connect('db/parser_ozon.db') as con:
-            cursor = con.cursor()
-            sql_query = f'SELECT *  FROM {rasdel}_with_params'
-            data = cursor.execute(sql_query).fetchall()
-            ParserOzon().save_to_excel(data=data, name=rasdel)
+# Дождитесь обработки Pretty Print (или выполните другие действия)
 
-def parse_params():
-    # Ссыли для парсера
-    urls = {
-        'УШМ': 'https://www.ozon.ru/category/uglovye-shlifmashiny-bolgarki-9879/',
-        'Шуруповерты': 'https://www.ozon.ru/category/shurupoverty-9858/',
-        'Электродрели': 'https://www.ozon.ru/category/elektrodreli-9860/',
-        'Перфораторы': 'https://www.ozon.ru/category/perforatory-9859/',
-        'Электролобзики': 'https://www.ozon.ru/category/elektrolobziki-9861/',
-        'Циркулярные_пилы': 'https://www.ozon.ru/category/diskovye-pily-10066/',
-        'Аккумуляторные_отвертки': 'https://www.ozon.ru/category/akkumulyatornye-otvertki-9902/',
-        'Газонокосилки_и_триммеры': 'https://www.ozon.ru/category/gazonokosilki-i-trimmery-14695/',
-        'Электро_и_бензопилы_цепные': 'https://www.ozon.ru/category/elektro-i-benzopily-tsepnye-10065/',
-        'Сварочное_оборудование': 'https://www.ozon.ru/category/svarochnye-apparaty-10047/',
-        'Штроборезы_и_бороздоделы': 'https://www.ozon.ru/category/shtroborezy-9891/',
-        'Клеевые_пистолеты_строительные': 'https://www.ozon.ru/category/kleevye-pistolety-stroitelnye-36082/',
-        'Электрорубанки': 'https://www.ozon.ru/category/elektrorubanki-9862/',
-        'Ленточные_шлифмашины': 'https://www.ozon.ru/category/lentochnye-shlifmashiny-9875/',
-        'Вибрационные_шлифмашины': 'https://www.ozon.ru/category/vibratsionnye-shlifmashiny-9876/',
-        'Полировальные_машины': 'https://www.ozon.ru/category/polirovalnye-mashiny-9878/',
-        'Эксцентриковые_шлифмашины': 'https://www.ozon.ru/category/ekstsentrikovye-shlifmashiny-9881/',
-        'Электроточила': 'https://www.ozon.ru/category/elektrotochila-9882/',
-        'Реноваторы_МФИ': 'https://www.ozon.ru/category/renovatory-34121/',
-        'Лазерные_уровни_нивелиры': 'https://www.ozon.ru/category/lazernye-urovni-niveliry-34693/',
-        # 'Отрезные_диски': 'https://www.ozon.ru/category/diski-otreznye-10116/',
-        # 'ingco': 'https://www.ozon.ru/category/instrumenty-dlya-remonta-i-stroitelstva-9856/
-        # ?category_was_predicted=true&from_global=true&text=ingco',
-        # 'Наборы': 'https://www.ozon.ru/category/nabory-instrumentov-31107/',
-        # 'Видеонаблюдение': 'https://www.ozon.ru/category/kamery-videonablyudeniya-15846/'
-
-    }
-
-    for rasdel, url in urls.items():
-        parser = ParserOzon(rasdels=urls)
-        db = DB_my_connection()
-        result = parser.parser_with_params(rasdel=rasdel)
-        db.insert_in_table_with_params(rasdel=rasdel, my_dict=result)
-
-
-if __name__ == '__main__':
-    main_parser()
-
-
-from KRC import ParserKRC
-
-import schedule
-
-def job():
-    ParserKRC().main()
-
-schedule.every().day.at("08:28:00").do(job)
-
-
-while True:
-    schedule.run_pending()
+# Закрытие браузера и завершение сеанса
+tab.stop()
+tab.close_tab()
+driver.quit()

@@ -90,6 +90,6 @@ class ParserVI():
 
 
 if __name__ == "__main__":
-    brand = ['hammer']
+    brand = ['hammer', 'tesla', 'wester']
     company = 'ОПТ-ТРЕЙД'
     ParserVI(brand=brand, company=company).parser_main()

@@ -1,5 +1,6 @@
 urls = {
-    'clean_json': '<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">',
+    'clean_json_1': '<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">',
+    'clean_json': '<html><head><meta name="color-scheme" content="light dark"><meta charset="utf-8"></head><body style="margin: 0"><div></div><pre>',
     'google_sheets_name': {
         'collecting_products': 'Парсер справочник товаров!A1:H1',
         'collecting_sellers': 'Парсер справочник продавцов!A1:H1',
@@ -46,7 +47,8 @@ urls = {
     'WB': {
         'brand': {
             'hammer': 22609,
-            'wester': 17920
+            'wester': 17920,
+            'tesla': 1234
             # 17919 Tesla, убрап так как там много говна и нет нашего товара
             },
         'xpath': {
@@ -56,19 +58,20 @@ urls = {
     },
     'sber': {
         'url': {
-            'STM': [
-                'https://sbermegamarket.ru/catalog/?q=hammer&collectionId=14576',
-                'https://megamarket.ru/catalog/?q=tesla&collectionId=6095769',
-                'https://megamarket.ru/catalog/?q=wester&collectionId=15153',
-                'https://megamarket.ru/catalog/?q=wester&collectionId=12007'],
-        },
+            'brand': {
+                "hammer": 'https://sbermegamarket.ru/catalog/?q=hammer&collectionId=14576',
+                "tesla": 'https://megamarket.ru/catalog/?q=tesla&collectionId=6095769',
+                "wester": 'https://megamarket.ru/catalog/?q=wester&collectionId=15153',
+                # 'https://megamarket.ru/catalog/?q=wester&collectionId=12007'],
+            }},
         'xpath': {
             'seller_xpath': './/div[contains(@class, "product-offer-name")]/div[1]',
             'seller_xpath_main': '//span[contains(@class, "pdp-merchant-rating-block__merchant-name")]',
             'price_xpath': './/span[contains(@class, "product-offer-price__amount")]',
             'price_xpath_main': '//span[contains(@class, "pdp-sales-block__price-final")]',
-            # 'card_link_xpath': './/div[contains(@class, "catalog-item-desktop")]',
-            'card_link_xpath': './/div[contains(@class, "catalog-item-desktop")]//div[@class="item-title"]/a',
+            'card_xpath': './/div[contains(@class, "catalog-item-desktop")]',
+            # 'card_link_xpath': './/div[contains(@class, "catalog-item-desktop")]//div[@class="item-title"]/a',
+            'card_link_xpath': './/div[@class="item-title"]/a',
             'card_offers': '//a[contains(@class, "more-offers-button")]',
             'offers': '//div[contains(@class, "product-offer_with-payment-method")]',
             'link': '//div[@class="item-title"]/a',
@@ -82,6 +85,7 @@ urls = {
             'brand': {
                 'hammer': 'https://spb.vseinstrumenti.ru/brand/hammer---2088444/',
                 'tesla': 'https://spb.vseinstrumenti.ru/brand/tesla--2071870/',
+                'wester': 'https://spb.vseinstrumenti.ru/brand/wester-1359/',
                 'vihr': 'https://spb.vseinstrumenti.ru/brand/vihr-1007/',
                 'zubr': 'https://spb.vseinstrumenti.ru/brand/zubr-665/',
                 'interskol': 'https://spb.vseinstrumenti.ru/brand/interskol-19/',
@@ -105,7 +109,9 @@ urls = {
     },
     'citilink': {
         'url': {
-            'brand': {'hammer': 'https://www.citilink.ru/search/?text=hammer',}
+            'brand': {'hammer': 'https://www.citilink.ru/search/?text=hammer',
+                      'tesla': '',
+                      'wester': ''}
         },
         'xpath': {
             'all_cards': '//div[@data-meta-product-id]',

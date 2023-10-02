@@ -1,16 +1,12 @@
 import datetime
 import json
-import re
 import time
-from pprint import pprint
 from find_name import find_name
 import jmespath
 from selenium.webdriver.common.by import By
 from browser import Driver_Chrom
 from push_to_google_sheets import GoogleSheet
 from urls import urls
-import concurrent.futures
-from tqdm import tqdm
 import multiprocessing
 from other import remove_duplicates, get_multy_funk
 from selenium.webdriver.support.ui import WebDriverWait
@@ -63,7 +59,10 @@ class ParserOzon(object):
             url = f'{brand["url"]}&page={page}&sorting=price_desc'
             driver.get(url)
             time.sleep(2)
-            all_json = json.loads(driver.page_source.strip(urls['clean_json']))
+            try:
+                all_json = json.loads(driver.page_source.strip(urls['clean_json']))
+            except:
+                return
             check = [key for key in all_json['widgetStates'] if key.startswith(urls['Ozon']['key_json']['main'])]
             res = jmespath.search(urls['Ozon']['jmespath']['STM']['main'], json.loads(all_json['widgetStates'][check[-1]])) if len(check) > 0 else ''
             for item in res:
@@ -103,7 +102,10 @@ class ParserOzon(object):
         with Driver_Chrom().loadChromTest(headless=True) as driver:
             driver.get(item_info['link'])
             time.sleep(2)
-            all_json = json.loads(driver.page_source.strip(urls['clean_json']))
+            try:
+                all_json = json.loads(driver.page_source.strip(urls['clean_json']))
+            except:
+                return
             seller = self.find_seller_price(all_json, 'seller_name', type_find='seller')
             price = self.find_seller_price(all_json, type_find='price')
             if price is not None: price = price
@@ -172,7 +174,10 @@ class ParserOzon(object):
             with Driver_Chrom().loadChromTest(headless=True) as driver:
                 driver.get(item_info['link'])
                 time.sleep(2)
-                all_json = json.loads(driver.page_source.strip(urls['clean_json']))
+                try:
+                    all_json = json.loads(driver.page_source.strip(urls['clean_json']))
+                except:
+                    return
                 seller = self.find_seller_price(all_json, 'seller_id', 'seller')
                 self.result_collecting_products.append((self.company, item_info['brand'], 'OZON', item_info['code'], item_info['name_full'], item_info['name_small'], f'https://www.ozon.ru/product/{item_info["code"]}', seller))
                 if seller not in self.saved_code['seller_id']:
@@ -207,7 +212,7 @@ class ParserOzon(object):
                 wait.until(EC.presence_of_element_located((By.XPATH, urls['Ozon']['xpath']['seller_info_button'])))
                 button = driver.find_elements(By.XPATH, urls['Ozon']['xpath']['seller_info_button'])[1]
                 button.click()
-                time.sleep(1)
+                time.sleep(2)
                 result = driver.find_elements(By.XPATH, urls['Ozon']['xpath']['seller_info'])
                 try: name, adress, code = [item.text for item in result[:3]]
                 except: name, adress, code = 'не нашли', 'не нашли', 'не нашли'
@@ -221,12 +226,15 @@ class ParserOzon(object):
     def parser_main(self) -> None:
         # собираем коды товаров и продавцов из справочника на Гугл листе
         self.saved_code = GoogleSheet().get_collecting_in_sheet()
+
         # создаем связку страница и ссылка для задачника
         tasks = [(page, {'brand': brand, 'url': urls['Ozon']['url']['brand'].get(brand)}) for brand in self.brand for page in range(1, 30)]
         # собираем все ссылки на товары. Сразу запускается по max_workers окон
         get_multy_funk(tasks=tasks, function=self.parser_page, max_workers=10)
+
         # из собранных ссылок филтруем только уникальные
         self.unic_list = remove_duplicates(input_list=self.list_items, key='code')
+
         # заходим в каждую карточку товара из списка уникальных ссылок и собираем данные. Сразу запускается по max_workers окон
         get_multy_funk(tasks=self.unic_list, function=self.parser_item, max_workers=10, range=urls['google_sheets_name']['main_parser'], what_need_save=self.result, SPREADSHEET_ID=self.SPREADSHEET_ID)
         time.sleep(5)
@@ -239,7 +247,7 @@ class ParserOzon(object):
             GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=self.result_collecting_products if len(self.result_collecting_products) == 1 else list(self.result_collecting_products), range=urls['google_sheets_name']['collecting_products'])
             time.sleep(5)
         if len(self.unic_seller) > 0:
-            get_multy_funk(tasks=self.unic_seller, function=self.collecting_sellers, max_workers=10, range=urls['google_sheets_name']['collecting_sellers'], what_need_save=self.list_seller)
+            get_multy_funk(tasks=self.unic_seller, function=self.collecting_sellers, max_workers=10, range=urls['google_sheets_name']['collecting_sellers'], what_need_save=self.list_seller, SPREADSHEET_ID=self.SPREADSHEET_ID)
             time.sleep(5)
             GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=self.list_seller if len(self.list_seller) == 1 else list(self.list_seller), range=urls['google_sheets_name']['collecting_sellers'])
 
