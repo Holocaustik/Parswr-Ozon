@@ -16,7 +16,7 @@ class Driver_Chrom():
         self.asd = 'http://whatismyipaddress.com'
 
     def loadChrome(self, headless=True):
-        uc.TARGET_VERSION = 117
+        uc.TARGET_VERSION = 120
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument("--window-size=1920x1080")
@@ -30,7 +30,7 @@ class Driver_Chrom():
         browser = uc.Chrome(headless=headless, options=chrome_options)
         return browser
 
-    def loadChromTest(self, headless=True):
+    def loadChromTest(self, headless=False, proxy: str = None):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--disable-dev-shm-usage')
         chrome_options.add_argument("--window-size=1920x1080")
@@ -46,6 +46,7 @@ class Driver_Chrom():
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', True)
+        chrome_options.add_argument(f'--proxy-server={proxy}') if proxy else ''
         driver = webdriver.Chrome(options=chrome_options,
                                   executable_path=r"/Users/vladimirivliev/PycharmProjects/pythonProject1/chromdirectory/chromedriver")
 
@@ -60,9 +61,9 @@ class Driver_Chrom():
 
         stealth(
             driver,
-            # user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.53 Safari/537.36",
             Accept="text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+            proxy=proxy if proxy is not None else '',
             languages=["en-US", "en"],
             vendor="Google Inc.",
             platform="Win32",
@@ -72,18 +73,9 @@ class Driver_Chrom():
             run_on_insecure_origins=False,
         )
 
-        # # url = "https://bot.sannysoft.com/"
-        # url = "https://leroymerlin.ru/search/?q=hammer"
-        # # url = "https://market.yandex.ru/search?cvredirect=1&text=hammer&rs=eJwzamEOYCxgPMrIkKBkCyQZuEDkgxs2QHKB-k6QSMMekEgrSIRBBsRecAxMHgWLbwCpVzhiBSQb7oNEGsrBKvlA4glzQeyGUBD7QBNI1sEfLF4OYh_g2gsyZwJIZMEmkIiCHtjMSJAuhxSwG9hAahQUQGocLlmDRNpB4gdK9oPM8QGpZ1gJtuU_WJcYSH1CGNgXJ8F6_4LN2QUSaXgGNmE1mJ2xG6R3OthVbWCRk2ATHoPNbwfJJoiCxdXBbvsIElfQBbNDwfaqgl3ODDbfFmxXGjg0PMCkO1jvemtw2IL1uoB1hYLVXwT7VBHsWk4rABUChdQ%2C&allowCollapsing=1&local-offers-first=1"
-        # driver.get(url)
-        # time.sleep(25)
-        # driver.quit()
         return driver
 
 if __name__ == "__main__":
-    driver = Driver_Chrom().loadChrome()
-    driver.get("https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=%2Fproduct/1187643763")
-    time.sleep(2)
-    pprint(driver.page_source.strip(urls['clean_json']))
+    Driver_Chrom().loadChromTest()
 
 

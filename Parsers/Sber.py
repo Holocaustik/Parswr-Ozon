@@ -25,6 +25,7 @@ class ParserSber():
 
     def parser_links(self, item: dict = {}) -> None:
         with Driver_Chrom().loadChromTest(headless=False) as driver:
+            print(item["url"])
             driver.get(item["url"])
             flag = True
             while flag:
@@ -33,7 +34,7 @@ class ParserSber():
                 offers = driver.find_elements(By.XPATH, urls['sber']['xpath']['card_xpath'])
                 for item in offers:
                     try:
-                        item.find_element(By.XPATH, './/div[@class="out-of-stock__footer"]')
+                        item.find_element(By.XPATH, './/button[@class="btn btn-secondary similar-goods-btn sm"]')
                         return
                     except:
                         link = item.find_element(By.XPATH, urls['sber']['xpath']['card_link_xpath'])

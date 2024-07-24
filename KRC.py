@@ -120,7 +120,6 @@ class ParserKRC():
 
     def main(self):
         GoogleSheet().delete_all()
-        driver = Driver_Chrom().loadChromTest(headless=True)
         brand = ['hammer', 'tesla', 'wester']
         company = 'ОПТ-ТРЕЙД'
         ParserOzon(brand=brand, company=company).parser_main()
@@ -130,19 +129,17 @@ class ParserKRC():
         print('ParserWB')
         ParserVI(brand=brand, company=company).parser_main()
         print('ParserVI')
-        ParserSber(brand=brand).main()
-        print('SBER')
-        ParserCitilink(brand=brand, company=company).parser_main()
-        self.parserMvideo(driver)
-        print('parserMvideo')
-        self.parser_eldorado(driver)
-        print('parser_eldorado')
-        self.parser_maxidom(driver)
-        print('parser_maxidom')
-        self.parser_holodilnik(driver)
-        print('parser_holodilnik')
-        driver.close()
-        driver.quit()
+        # ParserSber(brand=brand).main()
+        # print('SBER')
+        # # ParserCitilink(brand=brand, company=company).parser_main()
+        # # self.parserMvideo(driver)
+        # # print('parserMvideo')
+        # # self.parser_eldorado(driver)
+        # # print('parser_eldorado')
+        # # self.parser_maxidom(driver)
+        # # print('parser_maxidom')
+        # # self.parser_holodilnik(driver)
+        # # print('parser_holodilnik')
         GoogleSheet().parse_and_append_data()
 
 

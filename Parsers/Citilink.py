@@ -23,8 +23,9 @@ class ParserCitilink():
     def parser_page(self, *args, **kwargs) -> None:
         page, brand = args[0]
         try:
-            with Driver_Chrom().loadChromTest(headless=True) as driver:
+            with Driver_Chrom().loadChromTest(headless=False) as driver:
                 driver.get(f'{brand["url"]}&p={page}')
+                print(f'{brand["url"]}&p={page}')
                 time.sleep(5)
                 all_cards = driver.find_elements(By.XPATH, urls['citilink']['xpath']['all_cards'])
                 for card in all_cards:
@@ -33,6 +34,7 @@ class ParserCitilink():
                         name = find_name(full_name)
                         link = card.find_element(By.XPATH, urls['citilink']['xpath']['name']).get_attribute('href')
                         code = link.split('-')[-1].replace('/', '')
+                        print(full_name)
                         price = card.find_element(By.XPATH, urls['citilink']['xpath']['price']).text.replace('₽', '')
                         self.result.append(('Citilink', 'Citilink', name, price, datetime.date.today().strftime('%d. %m. %Y')))
                         self.result_new.append((self.company, code, price, '', '', datetime.date.today().strftime('%d.%m.%Y')))

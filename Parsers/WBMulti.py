@@ -1,6 +1,8 @@
 import datetime
 import json
 import time
+from pprint import pprint
+
 from find_name import find_name
 from selenium.webdriver.common.by import By
 from browser import Driver_Chrom
@@ -11,7 +13,7 @@ from urls import urls
 import multiprocessing
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from other import remove_duplicates, get_multy_funk
+from other import remove_duplicates, get_multy_funk, extract_json_from_html
 
 
 class ParserWB(object):
@@ -33,26 +35,28 @@ class ParserWB(object):
     def parser_page(self, *args, **kwargs) -> None:
         page, brand = args[0]
         with Driver_Chrom().loadChromTest(headless=True) as driver:
-            url = f'https://catalog.wb.ru/brands/h/catalog?appType=1&brand={brand["url"]}&curr=rub&dest=-1257786&page={page}&regions=80,38,83,4,64,33,68,70,30,40,86,75,69,1,31,66,22,110,48,71,114&sort=pricedown&priceU=150000%3B4679000&spp=0'
+            url = f'https://catalog.wb.ru/brands/h/catalog?appType=1&brand={brand["url"]}&curr=rub&dest=-1257786&page={page}'
             driver.get(url)
             time.sleep(3)
-            try: res = json.loads(driver.page_source.strip(urls['clean_json']))['data']['products']
+            try: res = extract_json_from_html(driver.page_source)
             except: return
         self.get_data_main(res=res, brand=brand['brand'])
 
     def get_data_main(self, res: list = [], brand: str = '') -> None:
-        for item in res:
-            data_main = {
-                'link': f'https://www.wildberries.ru/catalog/{int(item["id"])}/detail.aspx',
-                'name_small': find_name(item['name']),
-                'full_name': item['name'],
-                'price': int(item['salePriceU']) / 100,
-                'company': self.company,
-                'seller_id': item['supplierId'],
-                'code': item["id"]}
-            self.unic_code.append(('ОПТ-ТРЕЙД', brand, 'WB', data_main['code'], data_main['full_name'], data_main['name_small'], data_main['link'], data_main['seller_id']))
-            self.unic_seller.append({'seller_id': data_main["seller_id"], 'link': data_main['link']})
-            self.list_items.append(data_main)
+        if res:
+            for item in res["data"]["products"]:
+                # print(item)
+                data_main = {
+                    'link': f'https://www.wildberries.ru/catalog/{int(item["id"])}/detail.aspx',
+                    'name_small': find_name(item['name']),
+                    'full_name': item['name'],
+                    'price': int(item['salePriceU']) / 100,
+                    'company': self.company,
+                    'seller_id': item['supplierId'],
+                    'code': item["id"]}
+                self.unic_code.append(('ОПТ-ТРЕЙД', brand, 'WB', data_main['code'], data_main['full_name'], data_main['name_small'], data_main['link'], data_main['seller_id']))
+                self.unic_seller.append({'seller_id': data_main["seller_id"], 'link': data_main['link']})
+                self.list_items.append(data_main)
 
     def collecting_sellers(self, seller_info: dict = None) -> None:
         with Driver_Chrom().loadChromTest(headless=False) as driver:
@@ -96,13 +100,10 @@ class ParserWB(object):
     def parser_item(self, item_info: dict = None) -> None:
         try:
             with Driver_Chrom().loadChromTest(headless=True) as driver:
-                driver.execute_script("window.open('about:blank', '_blank');")
-                window_handles = driver.window_handles
-                driver.switch_to.window(window_handles[1])
-                driver.get(item_info['link'])
-                wait = WebDriverWait(driver, 10)
-                wait.until(EC.presence_of_element_located((By.XPATH, urls['WB']['xpath']['seller'])))
-                seller = driver.find_element(By.XPATH, urls['WB']['xpath']['seller']).text
+                url = f'https://card.wb.ru/cards/v1/detail?appType=1&curr=rub&dest=-1257786&spp=30&nm={item_info["code"]}'
+                driver.get(url)
+                time.sleep(1)
+                seller = extract_json_from_html(driver.page_source)["data"]["products"][0]["supplier"]
                 self.result.append(('WB', seller, item_info['name_small'], item_info['price'], datetime.date.today().strftime('%d.%m.%Y')))
                 self.result_new.append((item_info['company'], item_info['code'], item_info['price'], '', '', datetime.date.today().strftime('%d.%m.%Y')))
         except:
@@ -132,22 +133,22 @@ class ParserWB(object):
         saved_code_multy_product = saved_code['product_id']
         saved_code_multy_seller = saved_code['seller_id']
 
-        tasks = [(page, {'brand': brand, 'url': urls['WB']['brand'].get(brand)}) for brand in self.brand for page in range(1, 50)]
+        tasks = [(page, {'brand': brand, 'url': urls['WB']['brand'].get(brand)}) for brand in self.brand for page in range(1, 5)]
         get_multy_funk(function=self.parser_page, tasks=tasks, max_workers=self.max_threads, SPREADSHEET_ID=self.SPREADSHEET_ID)
         unic_list = remove_duplicates(input_list=self.list_items, key='code')
         get_multy_funk(function=self.parser_item, tasks=unic_list, max_workers=self.max_threads, what_need_save=self.result, range=urls['google_sheets_name']['main_parser'], SPREADSHEET_ID=self.SPREADSHEET_ID)
         time.sleep(15)
-        GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(self.result_new),range=urls['google_sheets_name']['main_parser_new'])
-        filter_unic_seller = self.get_unic_seller_id(saved_id=saved_code_multy_seller, need_to_add=self.unic_seller)
-        if len(filter_unic_seller) > 0:
-            get_multy_funk(function=self.collecting_sellers, tasks=filter_unic_seller, max_workers=self.max_threads, what_need_save=self.list_seller, range=urls['google_sheets_name']['collecting_sellers'], SPREADSHEET_ID=self.SPREADSHEET_ID)
-            time.sleep(15)
-            GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(self.list_seller), range=urls['google_sheets_name']['collecting_sellers'])
-        filter_unic_product = self.get_unic_product_id(saved_id=saved_code_multy_product, need_to_add=self.unic_code)
-        if len(filter_unic_product) > 0:
-            GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=filter_unic_product, range=urls['google_sheets_name']['collecting_products'])
-            time.sleep(15)
-            GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(filter_unic_product), range=urls['google_sheets_name']['collecting_products'])
+        # GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(self.result_new),range=urls['google_sheets_name']['main_parser_new'])
+        # filter_unic_seller = self.get_unic_seller_id(saved_id=saved_code_multy_seller, need_to_add=self.unic_seller)
+        # if len(filter_unic_seller) > 0:
+        #     get_multy_funk(function=self.collecting_sellers, tasks=filter_unic_seller, max_workers=self.max_threads, what_need_save=self.list_seller, range=urls['google_sheets_name']['collecting_sellers'], SPREADSHEET_ID=self.SPREADSHEET_ID)
+        #     time.sleep(15)
+        #     GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(self.list_seller), range=urls['google_sheets_name']['collecting_sellers'])
+        # filter_unic_product = self.get_unic_product_id(saved_id=saved_code_multy_product, need_to_add=self.unic_code)
+        # if len(filter_unic_product) > 0:
+        #     GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=filter_unic_product, range=urls['google_sheets_name']['collecting_products'])
+        #     time.sleep(15)
+        #     GoogleSheet(self.SPREADSHEET_ID_NEW).append_data(value_range_body=list(filter_unic_product), range=urls['google_sheets_name']['collecting_products'])
 
 
 if __name__ == "__main__":

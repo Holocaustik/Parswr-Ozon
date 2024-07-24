@@ -18,6 +18,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 class GoogleSheet:
     SPREADSHEET_ID = '1mu-ONFyjL0Sam3TRLuVPwxr7qC90k9Pspmp34P60AV8'
+    SPREADSHEET_ID_price_220 = "1haeDysc7udUwXAlUGwG0BWxt0lAdYZn57lIPp5jdkuU"
     order_plan_sheet_id = '18K6ZiZ5YIDP_yOe5GfxYHK3g_2lqwO2GnvHxTIbqGpU'
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets',
               'https://www.googleapis.com/auth/drive']
@@ -26,6 +27,7 @@ class GoogleSheet:
              'https://www.googleapis.com/auth/drive']
     service = None
     new_id = '1jkuLyTbRLN98RFLo35qbGH0FwAFcR_qhESe9DPO05wk'
+    avito_id = '1yrD4lsHgj36odcEPXQbhn8viGu5ySz1Mo4JDfMUjH8M'
 
     def __init__(self, SPREADSHEET_ID=new_id, new_id=order_plan_sheet_id):
         creds = None
@@ -91,7 +93,7 @@ class GoogleSheet:
             'valueInputOption': 'USER_ENTERED',
             'data': data
         }
-        result = self.service.spreadsheets().values().clear(spreadsheetId=self.SPREADSHEET_ID,
+        result = self.service.spreadsheets().values().clear(spreadsheetId=self.SPREADSHEET_ID_price_220,
                                                                   body=body).execute()
         print('{0} cells updated.'.format(result.get('totalUpdatedCells')))
 
@@ -123,13 +125,11 @@ class GoogleSheet:
         # TODO: Change code below to process the `response` dict:
         pprint(response)
 
-    def append_data_FoxWeld(self, range: str = None, value_range_body: list = None):
-
+    def append_data_FoxWeld(self,spreadsheet_id: str = '', range: str = None, value_range_body: list = None):
         credentials = self.credentials
         service = discovery.build('sheets', 'v4', credentials=credentials)
 
         # The ID of the spreadsheet to update.
-        spreadsheet_id = '1kEguI4qVix6bQnF2VGsoO9Pk5oBcqZOY5jTlCefsaCo'  # TODO: Update placeholder value.
 
         # The A1 notation of a range to search for a logical table of data.
         # Values will be appended after the last row of the table.
@@ -145,7 +145,7 @@ class GoogleSheet:
 
         request = service.spreadsheets().values().append(spreadsheetId=spreadsheet_id, range=range,
                                                          valueInputOption=value_input_option,
-                                                         insertDataOption=insert_data_option, body={'values': value_range_body})
+                                                          body={'values': value_range_body})
         response = request.execute()
 
         # TODO: Change code below to process the `response` dict:
@@ -231,35 +231,22 @@ class GoogleSheet:
         }
         return result
 
-    def get_current_stock(self):
+    def get_current_stock(self, spreadsheet_id, range='Остатки ОТ импорт!A3:B1000'):
         credentials = self.credentials
         service = discovery.build('sheets', 'v4', credentials=credentials)
-        spreadsheet_id = self.order_plan_sheet_id
         sh = service.spreadsheets()
-        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Остатки ОТ импорт!A3:B1000').execute()
-        current_stock = {}
-        for i in range(1, len(responce["values"])):
-            product_code = int(responce['values'][i][0])
-            stock =  responce['values'][i][1]
-            current_stock[product_code] = stock
-        return current_stock
+        responce = sh.values().get(spreadsheetId=spreadsheet_id, range=range).execute()
+        return responce
 
     def get_current_orders(self):
         credentials = self.credentials
         service = discovery.build('sheets', 'v4', credentials=credentials)
-        spreadsheet_id = self.order_plan_sheet_id
+        spreadsheet_id = "1vjDNkkWOjRpg88Uu4Cr2X_LR8BNgodFw9HPxtFhStfQ"
         sh = service.spreadsheets()
-        responce = sh.values().get(spreadsheetId=spreadsheet_id, range='Тест!A2:C1000').execute()
-        current_orders = {
-            "Product": {}
-        }
-        for i in range(1, len(responce["values"])):
-            product_code = int(responce['values'][i][0])
-            date = responce['values'][i][1]
-            order = responce['values'][i][2]
-            result = {date: order}
-            current_orders["Product"][product_code] = {"Month": result}
-        return current_orders
+        responce1 = sh.values().get(spreadsheetId=spreadsheet_id, range='VI!A2:C10').execute()
+        responce2 = sh.values().get(spreadsheetId=spreadsheet_id, range='Отзывы!A2:B27').execute()
+
+        return {"responce1": responce1, "responce2": responce2}
 
     def delete_all(self):
 
@@ -307,9 +294,9 @@ class GoogleSheet:
         service = build('sheets', 'v4', credentials=credentials)
 
         # Идентификатор таблицы и листа
-        spreadsheet_id = '18K6ZiZ5YIDP_yOe5GfxYHK3g_2lqwO2GnvHxTIbqGpU'
+        spreadsheet_id = self.SPREADSHEET_ID_price_220
         sheet_id = 0  # номер листа (начинается с 0)
-        sheet_name = 'Моделирование'  # название листа
+        sheet_name = 'Цены 220 Вольт!A1:D1'  # название листа
 
         # Очистка данных
 

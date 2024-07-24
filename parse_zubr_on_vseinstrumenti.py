@@ -1,8 +1,11 @@
 import datetime
 import json
 import time
+
+from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from browser import Driver_Chrom
+from find_name import find_name
 from push_to_google_sheets import GoogleSheet
 
 
@@ -15,27 +18,26 @@ def parser_VI():
         driver = Driver_Chrom().loadChromTest(headless=True)
         driver.get(url)
         time.sleep(2)
-        last_page = min(int(driver.find_elements(By.XPATH, '//a[@class="number"]')[-1].text), 50)
-        for page in range(1, last_page):
+        for page in range(1, 10):
             if page > 1:
                 url = f'https://spb.vseinstrumenti.ru/brand/{brand}/page{page}/?asc=desc&orderby=price'
             else:
                 url = f'https://spb.vseinstrumenti.ru/brand/{brand}/?asc=desc&orderby=price'
             driver.get(url)
             time.sleep(3)
-            names = driver.find_elements(By.XPATH, '//a[@data-qa="product-name"]')
-            prices = driver.find_elements(By.XPATH, '//p[contains(text(), " р.")]')
-            for i in range(len(names)):
-                brand = brand
-                name = names[i].text
-                try:
-                    price = prices[i].text.strip(' р.').replace(' ', '')
-                except:
-                    price = 0
-                date = datetime.date.today().strftime('%d. %m. %Y')
-                result.append([brand, name, price, date])
-    driver.close()
-    driver.quit()
+            page_source = driver.page_source
+            try:
+                soup = BeautifulSoup(page_source, 'html.parser')
+                elements = soup.find_all('div', {'data-qa': 'products-tile'})
+                for element in elements:
+                    full_name = element.find('a', {'data-qa': 'product-name'}).get('title')
+                    price = element.find('p', {'data-qa': 'product-price-current'}).text.replace(' р.', '').replace(' ', '')
+                    date = datetime.date.today().strftime('%d. %m. %Y')
+                    result.append([brand, full_name, price, date])
+            except:
+                break
+        driver.close()
+        driver.quit()
 
     data = result
     gs = GoogleSheet(SPREADSHEET_ID)

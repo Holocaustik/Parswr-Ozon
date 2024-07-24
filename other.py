@@ -1,6 +1,9 @@
 import datetime
 import json
 import re
+import asyncio
+from proxybroker import Broker
+import json
 import time
 from pprint import pprint
 from find_name import find_name
@@ -12,6 +15,8 @@ from urls import urls
 import concurrent.futures
 from tqdm import tqdm
 import multiprocessing
+import  socket
+from http import cookies
 
 
 def remove_duplicates(input_list: list = [], key: str = None) -> list:
@@ -59,3 +64,67 @@ def get_multy_funk(tasks: list = None, function: object = None, max_workers: int
     if range is not None:
         what_need_save = what_need_save if len(what_need_save) == 1 else list(what_need_save)
         GoogleSheet(SPREADSHEET_ID).append_data(value_range_body=what_need_save, range=range)
+
+
+def intercept(request):
+    cookie = cookies.SimpleCookie()
+    cookie.load(request.headers['Cookie'] or '')
+    cookie['_lr_uf_-xnoogq'] = 'fa845c27-e6da-43eb-a3dd-b2d02ac950d6'
+
+    del request.headers['Cookie']
+    request.headers['Cookie'] = '; '.join(f'{k}={v.value}' for k, v in cookie.items())
+
+class Proxy():
+    def __init__(self):
+        self.proxy_list = []
+
+    async def show(self, proxies):
+        while True:
+            proxy = await proxies.get()
+            if proxy is None: break
+            self.proxy_list.append(f'{proxy.host}:{proxy.port}')
+
+
+
+    def get_proxy(self, col: int=10):
+        tasks = self.get_tasks_proxy(col)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(tasks)
+        print(self.proxy_list)
+        return self.proxy_list
+
+    def get_tasks_proxy(self, col: int=10):
+        proxies = asyncio.Queue()
+        broker = Broker(proxies)
+        tasks = asyncio.gather(
+            broker.find(types=['HTTP', 'HTTPS'],  countries=["RU"], limit=col),
+            self.show(proxies))
+        return tasks
+
+def get_local_ip():
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+    print(local_ip)
+
+
+def extract_json_from_html(html_text):
+    # Используем регулярное выражение для извлечения текста JSON из HTML
+    json_pattern = re.compile(r'<pre>(.*?)</pre>', re.DOTALL)
+    match = json_pattern.search(html_text)
+    if match:
+        json_text = match.group(1)
+        try:
+            # Преобразуем строку JSON в объект Python
+            json_data = json.loads(json_text)
+            return json_data
+        except json.JSONDecodeError:
+            print("Ошибка декодирования JSON")
+            return None
+    # else:
+    #     print("JSON не найден в тексте HTML")
+    #     return None
+
+
+
+if __name__ == "__main__":
+    Proxy().get_proxy(20)

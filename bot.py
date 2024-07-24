@@ -8,7 +8,7 @@ bot = telebot.TeleBot('6270832355:AAGb0phBLovlvAOwcU-TSGm2mZIn8jFHDlM')
 @bot.message_handler(commands=['start'])
 def start_message(message, msc):
     bot.send_message(message.chat.id, msc)
-'https://www.ozon.ru/api/composer-api.bx/page/json/v1?url=https://www.ozon.ru/category/elektroinstrumenty-9857/hammer-26303172/%2F%3Fpage%3D11'
+
 
 @bot.message_handler(commands=['button'])
 def button_message(message):
@@ -36,6 +36,7 @@ def message_reply(message):
             bot.send_message(message.chat.id, 'Закончили парсить ')
     if message.text == "Запустить Ozon":
         if __name__ == '__main__':
+            bot.send_message(message.chat.id, message.chat.id)
             bot.send_message(message.chat.id, 'Начали парсить Ozon')
             ParserKRC().parser_ozon()
             bot.send_message(message.chat.id, 'Закончили парсить Ozon')

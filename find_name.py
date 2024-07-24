@@ -3,7 +3,9 @@ import re
 
 def find_name(full_name: str = '') -> str:
 
-    test_name = re.search("[A-Z]+[0-9/-]+[/A-ZА-Я0-9]+", full_name.replace('&amp;#x2F;', '/').replace('&#x2F;', ''))
+    # test_name = re.search("[A-Z]+[0-9/-]+[/A-ZА-Я0-9]+", full_name.replace('&amp;#x2F;', '/').replace('&#x2F;', ''))
+    test_name = re.search("[А-Я]+[0-9/-]+[/А-Я0-9]+", full_name.replace('&amp;#x2F;', '/').replace('&#x2F;', ''))
+
     test_name_1 = re.search("[A-ZА-Я]+[0-9/]+", full_name.replace('&#x2F;', ''))
     test_name_2 = re.search("[A-ZА-Я]+[0-9/]+[/A-ZА-Я0-9]+",
                             full_name.replace('Hammer', '').replace('HAMMER', '').replace('Flex', '').replace('flex',

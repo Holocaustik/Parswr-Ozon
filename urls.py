@@ -1,11 +1,14 @@
 urls = {
     'clean_json_1': '<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">',
-    'clean_json': '<html><head><meta name="color-scheme" content="light dark"><meta charset="utf-8"></head><body style="margin: 0"><div></div><pre>',
+    'clean_json': '<html><head><meta name="color-scheme" content="light dark"><meta charset="utf-8"></head><body><pre>',
     'google_sheets_name': {
         'collecting_products': 'Парсер справочник товаров!A1:H1',
         'collecting_sellers': 'Парсер справочник продавцов!A1:H1',
         'main_parser': "парсер OZON WB!A1:E1",
-        "main_parser_new": "Результат парсера!A1:D1"
+        "main_parser_new": "Результат парсера!A1:D1",
+        "main_parser_Ozon_anal": "Парсер!A1:D1"
+
+
 
     },
     'Ozon': {
@@ -19,15 +22,20 @@ urls = {
                 'wester': 'https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/brand/wester-27762156/category/stroitelstvo-i-remont-9700/?currency_price=1000.000%3B86670.000',
                 'zubr': 'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=https://www.ozon.ru/brand/zubr-26303502/category/instrumenty-dlya-remonta-i-stroitelstva-9856/',
                 'ferm': 'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=https://www.ozon.ru/brand/ferm-87317356/',
-                'ingco': 'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=https://www.ozon.ru/brand/ingco-72464691/'
+                'ingco': 'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=https://www.ozon.ru/brand/ingco-72464691/',
+                'Foxweld': 'https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=https://www.ozon.ru/category/svarochnoe-oborudovanie-10046/?brand=100504861%2C87112978%2C100524464/?currency_price=1000.000%3B86670.000',
+                'All': "https://www.ozon.ru/api/entrypoint-api.bx/page/json/v2?url=https://www.ozon.ru/category/elektroinstrumenty-9857/?batteryvoltage=309459%2C168118%2C308701%2C168119%2C168120%2C168117&category_was_predicted=true&deny_category_prediction=true&from_global=true&includedbattery=37725&opened=features%2Cbatteryvoltage&text=%D1%88%D1%83%D1%80%D1%83%D0%BF%D0%BE%D0%B2%D0%B5%D1%80%D1%82&type=47216",
                 }},
         'jmespath': {
             'STM': {
                 'main': 'items[*].[mainState[*].atom.textAtom.text, mainState[*].atom.priceV2.price[0].text || mainState[*].atom.priceWithTitle.price, topRightButtons[*].favoriteProductMoleculeV2.id]',
+                # 'main': 'items[*].[mainState[*?id=="name"].atom.textAtom.text | [0], mainState[*].atom.priceV2.price[0].text || mainState[*].atom.priceWithTitle.price, topRightButtons[*].favoriteProductMoleculeV2.id]'
+                'main_1': 'items[*].[mainState[*].atom.textAtom.text, c.price[0].text || mainState[*].atom.priceWithTitle.price, topRightButtons[*].favoriteProductMoleculeV2.id], mainState[*].atom.testInfo',
                 'seller_name': 'seller.name || name',
                 'seller_id': 'seller.link || id',
                 'credentials': 'credentials',
-                'price': 'cardPrice || price || originalPrice'},
+                'price': 'cardPrice || price || originalPrice',
+                'seller': "webCurrentSeller-735663-default-1"},
             'LEX ': 'items[*].[mainState[*].atom.textAtom.text, mainState[*].atom.priceWithTitle.price, action.link]',
             'Foxweld': 'items[*].[mainState[*].atom.textAtom.text, mainState[*].atom.priceWithTitle.price || mainState[*].atom.priceV2.price[0].text, action.link]'
         },
@@ -41,7 +49,8 @@ urls = {
             'main': 'searchResultsV2',
             'webPrice': 'webPrice',
             'seller': 'webStickyProducts',
-            'seller_1': 'webCurrentSeller'
+            'seller_1': 'webCurrentSeller',
+            'tth': "webCharacteristics"
         }
     },
     'WB': {
@@ -52,7 +61,8 @@ urls = {
             # 17919 Tesla, убрап так как там много говна и нет нашего товара
             },
         'xpath': {
-            'seller': "//a[contains(@class, 'seller-info__name seller-info__name--link')]",
+            # 'seller': "//a[contains(@class, 'seller-info__name seller-info__name--link')]",
+            'seller': "//span[contains(@class, 'seller-info__name')]",
             'price': "//span[contains(text(), 'без Ozon Карты')]//preceding::span[2]"
         }
     },
@@ -100,7 +110,7 @@ urls = {
         },
         'xpath': {
             'last_page': '//a[@class="number"]',
-            'xpath_for_cards_VI': "//div[@data-qa='products-tile']",
+            'xpath_for_cards_VI': "//div[contains(@data-qa,'products-tile')]",
             'xpath_for_price_VI': ".//p[@data-qa='product-price-current']",
             'xpath_for_name_VI': ".//a[@data-qa='product-name']",
             'check_availability_VI': ".// div[contains(@data-qa, 'not-available')]",
