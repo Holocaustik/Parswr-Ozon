@@ -19,7 +19,7 @@ from http.cookies import SimpleCookie
 class ParserOzon(object):
 
     def __init__(self, brand: list = [], company: str = None):
-        self.SPREADSHEET_ID_NEW = '1uvZX197iPA-Gy47pDQqe1uqonxTkAvWZz4fvrjHuO3s'
+        self.SPREADSHEET_ID_NEW = '1A8Trme4j0MxNgErgtWHFLqjQbkeBF_LBh7yBei9bp7I'
         self.result = multiprocessing.Manager().list()
         self.unic_params = multiprocessing.Manager().list()
         self.unic_code = multiprocessing.Manager().list()
@@ -113,7 +113,6 @@ class ParserOzon(object):
             except:
                 return
 
-
     def extract_data(self,  dicts_list, keys_list):
         keys = list(keys_list)
         keys.insert(0, "SKU")
@@ -121,7 +120,7 @@ class ParserOzon(object):
         return [keys] + data_rows
 
     def get_tth(self):
-        goods = filter(lambda x: int(x[17]) > -10, GoogleSheet().get_current_stock(self.SPREADSHEET_ID_NEW, "Щетки!A2:AC2000")["values"])
+        goods = filter(lambda x: int(x[17]) > -10, GoogleSheet().get_current_stock(self.SPREADSHEET_ID_NEW, "Компрессоры!A2:AC2000")["values"])
         tasks = list(map(lambda x: [x[0], x[23]], goods))
         get_multy_funk(tasks, self.parser_item, max_workers=10)
         num = self.extract_data(self.result, list(set(self.unic_params)))

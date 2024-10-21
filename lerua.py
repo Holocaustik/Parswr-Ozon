@@ -1,6 +1,5 @@
-import time
-import requests
 import random
+import time
 import string
 import time
 import os
@@ -11,23 +10,36 @@ from push_to_google_sheets import GoogleSheet
 import random
 import schedule
 from other import create_dicts
+import pyautogui as pyautogui
+from browser import Driver_Chrom
+import keyboard
+import time
 
-
-class ParserVI:
+class ParserLerua:
 
     def __init__(self):
-        self.xpathComment = '//span[contains(text(), "Мнение о товаре")]/../../..'
-        self.xpathPerfecto = '//span[contains(text(), "Достоинства")]/../../..'
-        self.xpathNG = '//span[contains(text(), "Недостатки")]/../../..'
-        self.xpathStars = "//div[@class = 'stars']/div[5]"
-        self.xpatName = '//span[contains(text(), "Имя")]/../../..'
-        self.xpatEmail = '//span[contains(text(), "E-mail")]/../../..'
-        self.button = '//span[contains(text(), "Отправить отзыв")]/..'
-        self.url = "https://petrovich.ru/product/1022102/#reviews"
+        self.xpathReviewBotten = "//span[contains(text(), 'Отзывы')]"
+        self.xpathSendBotten = "//span[contains(text(), 'Отправить')]"
+
+        self.xpath_write_review_botten = "//span[contains(text(), 'Написать отзыв')]"
+        self.xpath_total_score = "//div[@data-qa = 'rating-form-total-score_mf-pdp']/div/label[5]"
+        self.xpath_price = "//div[@data-qa = 'rating-form-by-price-score_mf-pdp']/div/label[5]"
+        self.xpath_quality = "//div[@data-qa = 'rating-form-by-quality-score_mf-pdp']/div/label[5]"
+        self.xpath_review = "//div[@data-testid= 'wrapperTextareaTestId']/textarea"
+        # self.xpath_review = "//span[@data-testid='radio-label'][3;4;5]"
+        self.xpatName = "//h3[contains(text(), 'Ваши данные')]//following::div[1]/div/div/input"
+        self.xpatEmail = "//h3[contains(text(), 'Ваши данные')]//following::div[1]//following::div[1]/div/div/input"
         self.spreadsheet_id = "1vjDNkkWOjRpg88Uu4Cr2X_LR8BNgodFw9HPxtFhStfQ"
         self.API = 'https://www.1secmail.com/api/v1/'
         self.domain_list = ["1secmail.com", "1secmail.org", "1secmail.net"]
         self.domain = random.choice(self.domain_list)
+
+    def switch_language(self):
+        # Задержка для плавного переключения
+        time.sleep(1)
+
+        # Симуляция нажатия Command + Space (или Control + Space)
+        pyautogui.hotkey('command', 'space')
 
     def filter_bmp_characters(self, text):
         return ''.join(c for c in text if ord(c) <= 0xFFFF)
@@ -35,31 +47,44 @@ class ParserVI:
     def parser_page(self, text="", url="") -> None:
         driver = Driver_Chrom().loadChromTest(headless=False)
         driver.get(url)
-        time.sleep(2)
+        time.sleep(3)
+        self.payload(text)
+        driver.switch_to.window(driver.window_handles[1])
+        time.sleep(3)
         try:
             name = self.filter_bmp_characters(self.generate_russian_name())
             username = self.generate_username()
             email = f'{username}@{self.domain}'
-            email_field = driver.find_element(By.XPATH, self.xpatEmail)
+            reviewBotten = driver.find_element(By.XPATH, self.xpathReviewBotten)
+            reviewBotten.click()
+            time.sleep(2)
+            write_review_botten = driver.find_element(By.XPATH, self.xpath_write_review_botten)
+            write_review_botten.click()
+            time.sleep(2)
+
+            total_score_field = driver.find_element(By.XPATH, self.xpath_total_score)
+            total_score_field.click()
+            time.sleep(1)
+            price_field = driver.find_element(By.XPATH, self.xpath_price)
+            price_field.click()
+            time.sleep(1)
+            quality_field = driver.find_element(By.XPATH, self.xpath_quality)
+            quality_field.click()
+            time.sleep(1)
+            comment_field = driver.find_elements(By.XPATH, self.xpath_review)[0]
+            comment_field.send_keys(text)
             name_field = driver.find_element(By.XPATH, self.xpatName)
-            comment_field = driver.find_element(By.XPATH, self.xpathComment)
-            time.sleep(3)
-
-            comment_field.send_keys(self.filter_bmp_characters(text))
             name_field.send_keys(name)
+            email_field = driver.find_element(By.XPATH, self.xpatEmail)
             email_field.send_keys(email)
-            stars = driver.find_elements(By.XPATH, self.xpathStars)
+            time.sleep(2)
+            sendBotten = driver.find_element(By.XPATH, self.xpathSendBotten)
+            sendBotten.click()
+            time.sleep(7)
 
-            for star in stars:
-                # element = driver.find_element("css selector", "your_selector")
-                driver.execute_script("arguments[0].click();", star)
-                # star.click()
-                time.sleep(2)
-            button = driver.find_element(By.XPATH, self.button)
-            button.click()
-            time.sleep(15)
+
         except:
-            return
+                return
 
     def generate_word(self):
         # Списки популярных слов для большей реалистичности
@@ -208,11 +233,11 @@ class ParserVI:
         schedule.clear()
 
         # Определение времени запуска в пределах дня (10-15 раз)
-        times_to_run = random.randint(14, 27)
-        start_time = 730
+        times_to_run = random.randint(4, 7)
+        start_time = 570
 
         for _ in range(times_to_run):
-            interval_minutes = random.randint(2, 36)
+            interval_minutes = random.randint(2, 10)
             start_time += interval_minutes
 
             # Конвертация в часы и минуты
@@ -288,37 +313,46 @@ class ParserVI:
         r = requests.post(url, data=data)
         print(f'[X] Почтовый адрес {mail} - удален!\n')
 
-    # def main(self):
-    #     try:
-    #         username = self.generate_username()
-    #         mail = f'{username}@{self.domain}'
-    #         print(f'[+] Ваш почтовый адрес: {mail}')
-    #
-    #         mail_req = requests.get(f'{self.API}?login={mail.split("@")[0]}&domain={mail.split("@")[1]}')
-    #
-    #         while True:
-    #             self.check_mail(mail=mail)
-    #             time.sleep(5)
-    #
-    #     except(KeyboardInterrupt):
-    #         self.delete_mail(mail=mail)
-    #         print('Программа прервана!')
+    def payload(self, text):
+        # Эмулируем нажатие на адресную строку браузера
+        # Сначала перемещаем мышь на координаты адресной строки
+        pyautogui.moveTo(340, 40)  # Координаты адресной строки могут варьироваться
+
+        # Нажимаем на адресную строку
+        pyautogui.click()
+
+        # Выделяем текущий адрес (Ctrl+A или Command+A на macOS)
+        # pyautogui.hotkey('ctrl', 'a')  # для Windows/Linux
+        pyautogui.hotkey('command', 'a')  # для macOS
+
+        # Вводим новый URL
+        pyautogui.typewrite("https://lemanapro.ru/product/drel-akkumulyatornaya-hammer-acd12cs-12v-1x15ach-li-ion-98268237/#reviews-form")
+
+        # Нажимаем Enter для перехода
+        pyautogui.press('enter')
+        time.sleep(5)
 
     def main(self):
         responce = GoogleSheet().get_current_orders(spreadsheet_id=self.spreadsheet_id)
+
         items_list = create_dicts(["Код", "Модель", "Ссылка"], responce["responce1"]['values'])
         comments_list = create_dicts(["Код", "Отзыв", "Номер строки", "Использовано"], filter(lambda x: x[1] != "" and x[3] == 'FALSE', responce["responce2"]['values']))
+        code = items_list[0]["Код"]
+        url = items_list[0]["Ссылка"]
+        comment = list(filter(lambda x: x["Код"] == code, comments_list))
         for item in items_list:
             code = item["Код"]
             url = item["Ссылка"]
             comment = list(filter(lambda x: x["Код"] == code, comments_list))
+            print(comment)
             if len(comment) > 0:
-                text = comment[0]["Отзыв"]
-                row = comment[0]["Номер строки"]
-                self.parser_page(text, url)
-                GoogleSheet().get_update_values(self.spreadsheet_id, True, f'Отзывы!D{row}')
+                for item in comment:
+                    text = self.filter_bmp_characters(item["Отзыв"])
+                    row = item["Номер строки"]
+                    self.parser_page(text, url)
+                    GoogleSheet().get_update_values(self.spreadsheet_id, True, f'Отзывы!D{row}')
 
 
 if __name__ == "__main__":
-    # ParserVI().main()
-    ParserVI().run_scheduler()
+    ParserLerua().main()
+    # ParserVI().run_scheduler()

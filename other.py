@@ -107,6 +107,10 @@ def get_local_ip():
     print(local_ip)
 
 
+def create_dicts(headers, values):
+    return [{header: value for header, value in zip(headers, val) if val[1] != "" and val[2] != False} for val in values]
+
+
 def extract_json_from_html(html_text):
     # Используем регулярное выражение для извлечения текста JSON из HTML
     json_pattern = re.compile(r'<pre>(.*?)</pre>', re.DOTALL)

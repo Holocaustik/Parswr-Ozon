@@ -125,6 +125,17 @@ class GoogleSheet:
         # TODO: Change code below to process the `response` dict:
         pprint(response)
 
+    def get_update_values(self, spreadsheet_id, new_value, range_name):
+        credentials = self.credentials
+        service = discovery.build('sheets', 'v4', credentials=credentials)
+        spreadsheet_id = spreadsheet_id
+        body = {
+            'values': [[new_value]]
+        }
+        service.spreadsheets().values().update(
+            spreadsheetId=spreadsheet_id, range=range_name,
+            valueInputOption='USER_ENTERED', body=body).execute()
+
     def append_data_FoxWeld(self,spreadsheet_id: str = '', range: str = None, value_range_body: list = None):
         credentials = self.credentials
         service = discovery.build('sheets', 'v4', credentials=credentials)
@@ -238,13 +249,13 @@ class GoogleSheet:
         responce = sh.values().get(spreadsheetId=spreadsheet_id, range=range).execute()
         return responce
 
-    def get_current_orders(self):
+    def get_current_orders(self, spreadsheet_id):
         credentials = self.credentials
         service = discovery.build('sheets', 'v4', credentials=credentials)
-        spreadsheet_id = "1vjDNkkWOjRpg88Uu4Cr2X_LR8BNgodFw9HPxtFhStfQ"
+        spreadsheet_id = spreadsheet_id
         sh = service.spreadsheets()
         responce1 = sh.values().get(spreadsheetId=spreadsheet_id, range='VI!A2:C10').execute()
-        responce2 = sh.values().get(spreadsheetId=spreadsheet_id, range='Отзывы!A2:B27').execute()
+        responce2 = sh.values().get(spreadsheetId=spreadsheet_id, range='Отзывы!A2:D5000').execute()
 
         return {"responce1": responce1, "responce2": responce2}
 

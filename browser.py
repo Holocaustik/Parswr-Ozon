@@ -1,6 +1,8 @@
 import stealth as stealth
 import undetected_chromedriver as uc
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium_stealth import stealth
 import time
 from pprint import pprint
@@ -39,7 +41,8 @@ class Driver_Chrom():
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--disable-software-rasterizer')
-
+        service = Service(ChromeDriverManager().install())
+        # driver = webdriver.Chrome(service=service, options=chrome_options)
         chrome_options.add_argument("start-maximized")
         if headless:
             chrome_options.add_argument("--headless")
@@ -48,7 +51,7 @@ class Driver_Chrom():
         chrome_options.add_experimental_option('useAutomationExtension', True)
         chrome_options.add_argument(f'--proxy-server={proxy}') if proxy else ''
         driver = webdriver.Chrome(options=chrome_options,
-                                  executable_path=r"/Users/vladimirivliev/PycharmProjects/pythonProject1/chromdirectory/chromedriver")
+                                  service=service)
 
         stealth(driver,
                 languages=["en-US", "en"],
@@ -76,6 +79,8 @@ class Driver_Chrom():
         return driver
 
 if __name__ == "__main__":
-    Driver_Chrom().loadChromTest()
+    driver = Driver_Chrom().loadChromTest()
+    driver.get("https://www.ozon.ru")
+    time.sleep()
 
 
