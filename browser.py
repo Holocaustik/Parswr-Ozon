@@ -17,7 +17,7 @@ class Driver_Chrom():
         self.ozon = 'https://www.ozon.ru'
         self.asd = 'http://whatismyipaddress.com'
 
-    def loadChrome(self, headless=True):
+    def loadChrome(self, headless=False):
         uc.TARGET_VERSION = 120
         chrome_options = uc.ChromeOptions()
         chrome_options.add_argument('--disable-dev-shm-usage')
@@ -42,7 +42,6 @@ class Driver_Chrom():
         chrome_options.add_argument('--disable-gpu')
         chrome_options.add_argument('--disable-software-rasterizer')
         service = Service(ChromeDriverManager().install())
-        # driver = webdriver.Chrome(service=service, options=chrome_options)
         chrome_options.add_argument("start-maximized")
         if headless:
             chrome_options.add_argument("--headless")
@@ -79,7 +78,7 @@ class Driver_Chrom():
         return driver
 
 if __name__ == "__main__":
-    driver = Driver_Chrom().loadChromTest()
+    driver = Driver_Chrom().loadChromTest(headless=False)
     driver.get("https://www.ozon.ru")
     time.sleep()
 

@@ -1,6 +1,3 @@
-import time
-import requests
-import random
 import string
 import time
 import os
@@ -51,9 +48,7 @@ class ParserVI:
             stars = driver.find_elements(By.XPATH, self.xpathStars)
 
             for star in stars:
-                # element = driver.find_element("css selector", "your_selector")
                 driver.execute_script("arguments[0].click();", star)
-                # star.click()
                 time.sleep(2)
             button = driver.find_element(By.XPATH, self.button)
             button.click()
@@ -287,22 +282,6 @@ class ParserVI:
 
         r = requests.post(url, data=data)
         print(f'[X] Почтовый адрес {mail} - удален!\n')
-
-    # def main(self):
-    #     try:
-    #         username = self.generate_username()
-    #         mail = f'{username}@{self.domain}'
-    #         print(f'[+] Ваш почтовый адрес: {mail}')
-    #
-    #         mail_req = requests.get(f'{self.API}?login={mail.split("@")[0]}&domain={mail.split("@")[1]}')
-    #
-    #         while True:
-    #             self.check_mail(mail=mail)
-    #             time.sleep(5)
-    #
-    #     except(KeyboardInterrupt):
-    #         self.delete_mail(mail=mail)
-    #         print('Программа прервана!')
 
     def main(self):
         responce = GoogleSheet().get_current_orders(spreadsheet_id=self.spreadsheet_id)
